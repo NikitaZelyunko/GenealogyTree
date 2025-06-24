@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import * as d3 from 'd3'; // TODO переделать на конкретные импорты
 import {flareJson} from './flare';
-import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout } from 'd3';
+import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout, Selection as D3Selection } from 'd3';
 
 const treeRoot = ref<HTMLElement | null>(null);
 
@@ -13,15 +13,15 @@ type Tree = {
 
 
 type Config<Datum extends Tree> = {
-  path: string; // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-  id: ((d: {id: string}) => string) | null; // if tabular data, given a d in data, returns a unique identifier (string)
-  parentId: ((d: {id: string}) => string) | null; // if tabular data, given a node d, returns its parent’s identifier
-  children: Parameters<typeof d3.hierarchy<Datum>>; // if hierarchical data, given a d in data, returns its children
-  tree: TreeLayout<Datum> | ClusterLayout<Datum>; // TODO здесь могут быть любые layout для древовидных структур;// layout algorithm (typically d3.tree or d3.cluster)
-  sort: (a: Datum, b: Datum) => number;// how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
-  label?: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns the display name
-  title?: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns its hover text
-  link?: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, its link (if any)
+  path: Parameters<d3.StratifyOperator<Datum>['path']>[0]; // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
+  id: (<D extends {id?: string}>(d: D, index: number, data: D[]) => string | undefined) | null; // if tabular data, given a d in data, returns a unique identifier (string)
+  parentId: ((d: {parentId?: string}) => string | undefined) | null; // if tabular data, given a node d, returns its parent’s identifier
+  children: Parameters<typeof d3.hierarchy<Datum>>[1]; // if hierarchical data, given a d in data, returns its children
+  tree: () => TreeLayout<Datum> | ClusterLayout<Datum>; // TODO здесь могут быть любые layout для древовидных структур;// layout algorithm (typically d3.tree or d3.cluster)
+  sort: (a: HierarchyNode<Datum>, b: HierarchyNode<Datum>) => number;// how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
+  label: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns the display name
+  title: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns its hover text
+  link: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, its link (if any)
   linkTarget: string;// the target attribute for links (if any)
   width: number;// outer width, in pixels
   height: number;// outer height, in pixels
@@ -38,10 +38,12 @@ type Config<Datum extends Tree> = {
   curve: CurveFactory// curve for the link
 }
 
-function Tree<Datum>(data: Datum, { // data is either tabular (array of objects) or hierarchy (nested objects)
+function Tree<Datum extends Tree>(
+  data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects)
+{
   path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-  id = Array.isArray(data) ? d => d.id : null, // if tabular data, given a d in data, returns a unique identifier (string)
-  parentId = Array.isArray(data) ? d => d.parentId : null, // if tabular data, given a node d, returns its parent’s identifier
+  id = Array.isArray(data) ? d => d.id : undefined, // if tabular data, given a d in data, returns a unique identifier (string)
+  parentId = Array.isArray(data) ? d => d.parentId : undefined, // if tabular data, given a node d, returns its parent’s identifier
   children, // if hierarchical data, given a d in data, returns its children
   tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
   sort, // how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
@@ -51,29 +53,49 @@ function Tree<Datum>(data: Datum, { // data is either tabular (array of objects)
   linkTarget = "_blank", // the target attribute for links (if any)
   width = 640, // outer width, in pixels
   height, // outer height, in pixels
-  r = 3, // radius of nodes
+  radius = 3, // radius of nodes
   padding = 1, // horizontal padding for first and last column
   fill = "#999", // fill for nodes
   stroke = "#555", // stroke for links
   strokeWidth = 1.5, // stroke width for links
   strokeOpacity = 0.4, // stroke opacity for links
-  strokeLinejoin, // stroke line join for links
-  strokeLinecap, // stroke line cap for links
+  strokeLinejoin = '', // stroke line join for links
+  strokeLinecap = '', // stroke line cap for links
   halo = "#fff", // color of label halo 
   haloWidth = 3, // padding around the labels
   curve = d3.curveBumpX, // curve for the link
-} = {}) {
+}: Partial<Config<Datum>> ) {
 
   // If id and parentId options are specified, or the path option, use d3.stratify
   // to convert tabular data to a hierarchy; otherwise we assume that the data is
   // specified as an object {children} with nested objects (a.k.a. the “flare.json”
   // format), and use d3.hierarchy.
-  const root = path != null ? d3.stratify().path(path)(data)
-      : id != null || parentId != null ? d3.stratify().id(id).parentId(parentId)(data)
-      : d3.hierarchy(data, children);
+  let root: HierarchyNode<Datum>;
+
+  if(path || id || parentId) {
+    const stratifyOperator = d3.stratify<Datum & {id?: string; parentId?: string}>();
+  
+    if(path) {
+      stratifyOperator.path(path);
+    }
+
+    if(id) {
+      stratifyOperator.id(id);
+    }
+
+    if(parentId) {
+      stratifyOperator.parentId(parentId);
+    }
+
+    root = stratifyOperator(data as unknown as (Datum & {id?: string; parentId?: string})[]);
+  } else {
+    root = d3.hierarchy(data, children);
+  }
 
   // Sort the nodes.
-  if (sort != null) root.sort(sort);
+  if(sort) {
+    root.sort(sort);
+  }
 
   // Compute labels and titles.
   const descendants = root.descendants();
@@ -88,8 +110,12 @@ function Tree<Datum>(data: Datum, { // data is either tabular (array of objects)
   let x0 = Infinity;
   let x1 = -x0;
   root.each(d => {
-    if (d.x > x1) x1 = d.x;
-    if (d.x < x0) x0 = d.x;
+    const { x } = d;
+    if(typeof x !== 'number') {
+      return;
+    }
+    if (x > x1) x1 = x;
+    if (x < x0) x0 = x;
   });
 
   // Compute the default height.
@@ -98,7 +124,8 @@ function Tree<Datum>(data: Datum, { // data is either tabular (array of objects)
   // Use the required curve
   if (typeof curve !== "function") throw new Error(`Unsupported curve`);
 
-  const svg = d3.create("svg")
+  const svg = d3.create('svg');
+  svg
       .attr("viewBox", [-dy * padding / 2, x0 - dx, width, height])
       .attr("width", width)
       .attr("height", height)
@@ -116,9 +143,13 @@ function Tree<Datum>(data: Datum, { // data is either tabular (array of objects)
     .selectAll("path")
       .data(root.links())
       .join("path")
-        .attr("d", d3.link(curve)
-            .x(d => d.y)
-            .y(d => d.x));
+        .attr("d", d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve)
+            .x(d => {
+              return d.y ?? 0;
+            })
+            .y(d => {
+              return  d.x ?? 0;
+            }));
 
   const node = svg.append("g")
     .selectAll("a")
@@ -130,7 +161,7 @@ function Tree<Datum>(data: Datum, { // data is either tabular (array of objects)
 
   node.append("circle")
       .attr("fill", d => d.children ? stroke : fill)
-      .attr("r", r);
+      .attr("r", radius);
 
   if (title != null) node.append("title")
       .text(d => title(d.data, d));
@@ -173,7 +204,16 @@ return chart;
 }
 
 onMounted(() => {
-  treeRoot.value?.append(createTree());
+  const treeContainer = treeRoot.value;
+  if(!treeContainer) {
+    return;
+  }
+  const tree = createTree();
+  if(!tree) {
+    return;
+  }
+
+  treeContainer.append(tree);
 })
 
 
