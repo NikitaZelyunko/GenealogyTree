@@ -12,8 +12,35 @@ type Tree = {
   children?: Tree[];
 }
 
+/**
+ * Получение минимальных и максимальных границ координат точек дерева
+ */
+function getCoordinateRanges<Datum extends Tree>(root: HierarchyNode<Datum>) {
+  let x0 = Infinity;
+  let x1 = -x0;
+  let y0 = Infinity;
+  let y1 = -y0;
+  root.each(d => {
+    const { x, y } = d;
+    if(typeof x === 'number') {
+      if (x > x1) x1 = x;
+      if (x < x0) x0 = x;
+    }
+
+    if(typeof y === 'number') {
+      if (y > y1) y1 = y;
+      if (y < y0) y0 = y;
+    }
+  });
+  return {
+    x0, x1,
+    y0, y1
+  }
+}
+
 
 type Config<Datum extends Tree> = {
+  mode: 'horizontal' | 'vertical',
   path: Parameters<d3.StratifyOperator<Datum>['path']>[0]; // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
   id: (<D extends {id?: string}>(d: D, index: number, data: D[]) => string | undefined) | null; // if tabular data, given a d in data, returns a unique identifier (string)
   parentId: ((d: {parentId?: string}) => string | undefined) | null; // if tabular data, given a node d, returns its parent’s identifier
@@ -26,6 +53,8 @@ type Config<Datum extends Tree> = {
   linkTarget: string;// the target attribute for links (if any)
   width: number;// outer width, in pixels
   height: number;// outer height, in pixels
+  dx: number; // Расстояние между узлами на одном уровне по ширине/высоте в зависимости от mode
+  dy: number; // Расстояние между узлами на одном уровне по высоте/ширине в зависимости от mode
   radius: number;// radius of nodes
   padding: number;// horizontal padding for first and last column
   fill: string;// fill for nodes
@@ -42,6 +71,7 @@ type Config<Datum extends Tree> = {
 function Tree<Datum extends Tree>(
   data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects)
 {
+  mode = 'horizontal',
   path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
   id = Array.isArray(data) ? d => d.id : undefined, // if tabular data, given a d in data, returns a unique identifier (string)
   parentId = Array.isArray(data) ? d => d.parentId : undefined, // if tabular data, given a node d, returns its parent’s identifier
@@ -54,6 +84,8 @@ function Tree<Datum extends Tree>(
   linkTarget = "_blank", // the target attribute for links (if any)
   width, // outer width, in pixels
   height, // outer height, in pixels
+  dx = 200,
+  dy = 200,
   radius = 3, // radius of nodes
   padding = 1, // horizontal padding for first and last column
   fill = "#999", // fill for nodes
@@ -121,61 +153,82 @@ function Tree<Datum extends Tree>(
   const L = label == null ? null : descendants.map(d => label(d.data, d));
 
   // Compute the layout.
-  // Количество пикселей для узла по ширине
-  const dx = 200; 
-
-  // Количество пикселей для каждого уровня дерева
-  const dy = 200;
-  tree().nodeSize([dx, dy])(root); 
-  // tree().nodeSize([dy, dx])(root); 
+  if(mode === 'horizontal') {
+    tree().nodeSize([dy, dx])(root); 
+  } else {
+    tree().nodeSize([dx, dy])(root); 
+  }
 
   // Center the tree.
-  /**
-   * Получение минимальных и максимальных границ координат точек дерева
-   */
-  let x0 = Infinity;
-  let x1 = -x0;
-  let y0 = Infinity;
-  let y1 = -y0;
-  root.each(d => {
-    const { x, y } = d;
-    if(typeof x === 'number') {
-      if (x > x1) x1 = x;
-      if (x < x0) x0 = x;
-    }
-
-    if(typeof y === 'number') {
-      if (y > y1) y1 = y;
-      if (y < y0) y0 = y;
-    }
-  });
+  const {x0, x1, y0, y1} = getCoordinateRanges(root);
 
   // Compute the default height.
-  // Отступ по высоте от границ дерева(узлы и ребра) до границ viewbox
-  const viewboxYPadding = 20;
-  if (height === undefined) height = y1 - y0 + viewboxYPadding * 2;
-
-  // Compute the default width.
   // Отступ по ширине от границ дерева(узлы и ребра) до границ viewbox
   const viewboxXPadding = 20;
-  if (width === undefined) width = x1 - x0 + viewboxXPadding * 2;
+  // Отступ по высоте от границ дерева(узлы и ребра) до границ viewbox
+  const viewboxYPadding = 20;
 
-  const minXViewBox = x0 - viewboxXPadding;
+  // Compute the default height.
+  if(height === undefined) {
+    if(mode === 'horizontal') {
+      height = x1 - x0 + viewboxXPadding * 2;
+    } else {
+      height = y1 - y0 + viewboxYPadding * 2;
+    }
+  }
 
-  const minYViewBox = y0 - viewboxYPadding;
+  // Compute the default width.
+  if(width === undefined) {
+    if(mode === 'horizontal') {
+      width = y1 - y0 + viewboxYPadding * 2;
+    } else {
+      width = x1 - x0 + viewboxXPadding * 2;
+    }
+  }
+
+
+  let minXViewBox: number;
+  if(mode === 'horizontal') {
+    minXViewBox = y0 - viewboxYPadding;
+  } else {
+    minXViewBox = x0 - viewboxXPadding;
+  }
+
+  let minYViewBox: number;
+  if(mode === 'horizontal') {
+    minYViewBox = x0 - viewboxXPadding;
+  } else {
+    minYViewBox = y0 - viewboxYPadding;
+  }
 
   const svg = d3.create('svg');
   svg
-      // .attr("viewBox", [-dy * padding / 2, x0 - dx, width, height])
-      // .attr("viewBox", [-dy, x0 - dx, width, height])
-      // .attr("viewBox", [x0 - viewboxXPadding / 2, y0 - viewboxYPadding / 2, width, height])
-      // .attr("viewBox", [x0 - (x1 - x0) / 2, y0 - viewboxYPadding / 2, width, height])
       .attr("viewBox", [minXViewBox, minYViewBox, width, height])
       .attr("width", width)
       .attr("height", height)
       .attr("font-family", "sans-serif")
       .attr("font-size", 10);
 
+  const dLink = d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve);
+  
+  function getConfiguredLinkCoordinates() {
+    if(mode === 'horizontal') {
+      return dLink.x(d => {
+              return d.y ?? 0;
+            })
+            .y(d => {
+              return  d.x ?? 0;
+            })
+    } else {
+      return dLink.x(d => {
+              return d.x ?? 0;
+            })
+            .y(d => {
+              return  d.y ?? 0;
+            })
+    }
+  }
+  
   svg.append("g")
       .attr("fill", "none")
       .attr("stroke", stroke)
@@ -186,29 +239,22 @@ function Tree<Datum extends Tree>(
     .selectAll("path")
       .data(root.links())
       .join("path")
-        // .attr("d", d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve)
-        //     .x(d => {
-        //       return d.y ?? 0;
-        //     })
-        //     .y(d => {
-        //       return  d.x ?? 0;
-        //     }));
-        .attr("d", d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve)
-            .x(d => {
-              return d.x ?? 0;
-            })
-            .y(d => {
-              return  d.y ?? 0;
-            }));
+        .attr("d", getConfiguredLinkCoordinates());
 
+  let nodeTransform: (d: HierarchyNode<Datum>) => string;  
+    
+  if(mode === 'horizontal') {
+    nodeTransform = d => `translate(${d.y},${d.x})`;
+  } else {
+    nodeTransform = d => `translate(${d.x},${d.y})`;
+  }
   const node = svg.append("g")
     .selectAll("a")
     .data(root.descendants())
     .join("a")
       .attr("xlink:href", link == null ? null : d => link(d.data, d))
       .attr("target", link == null ? null : linkTarget)
-      // .attr("transform", d => `translate(${d.y},${d.x})`);
-      .attr("transform", d => `translate(${d.x},${d.y})`);
+      .attr("transform", nodeTransform);
 
   node.append("circle")
       .attr("fill", d => d.children ? stroke : fill)
@@ -246,6 +292,7 @@ const genealogy = {
 
 const flare = flareJson;
 const chart = Tree(genealogy, {
+  mode: 'vertical',
   label: d => d.name,
   title: (d, n) => `${n.ancestors().reverse().map(d => d.data.name).join(".")}`, // hover text
   link: (d, n) => `https://github.com/prefuse/Flare/${n.children ? "tree" : "blob"}/master/flare/src/${n.ancestors().reverse().map(d => d.data.name).join("/")}${n.children ? "" : ".as"}`,
