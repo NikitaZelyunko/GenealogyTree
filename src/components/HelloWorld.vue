@@ -51,7 +51,7 @@ function Tree<Datum extends Tree>(
   title, // given a node d, returns its hover text
   link, // given a node d, its link (if any)
   linkTarget = "_blank", // the target attribute for links (if any)
-  width = 640, // outer width, in pixels
+  width, // outer width, in pixels
   height, // outer height, in pixels
   radius = 3, // radius of nodes
   padding = 1, // horizontal padding for first and last column
@@ -63,6 +63,10 @@ function Tree<Datum extends Tree>(
   strokeLinecap = '', // stroke line cap for links
   halo = "#fff", // color of label halo 
   haloWidth = 3, // padding around the labels
+  // curve = d3.curveStepAfter, // ребра с прямыми углами
+  // curve = d3.curveLinear, // Линейные ребра(прямая линия от одной точки до другой)
+  // curve = d3.curveBumpX, // скругленные ребра (радиус скругления похоже как-то зависит от x)
+  // curve = d3.curveBumpY, // скругленные ребра (радиус скругления похоже как-то зависит от y)
   curve = d3.curveBumpX, // curve for the link
 }: Partial<Config<Datum>> ) {
 
@@ -97,39 +101,76 @@ function Tree<Datum extends Tree>(
     root.sort(sort);
   }
 
-  // Compute labels and titles.
+
+  /**
+   * Массив узлов дерева. Порядок определяется по слоям, т.е.
+   * Сначала идет корень дерева, потом по очереди его дети, затем по очереди дети детей.
+   * Пример:
+   * Parent0 -> [Child0, Child1],
+   * Child0 -> [Child00, Child01, Child02],
+   * Child1 -> [Child10, Child11],
+   * Child00 -> [Child000, Child001]
+   * Child11 -> [Child110].
+   * Порядок в descendants будет следующий:
+   * [Parent0, Child0, Child1, Child00, Child01, Child02, Child10, Child11, Child000, Child001, Child110]
+   */
   const descendants = root.descendants();
+  // Compute labels and titles.
   const L = label == null ? null : descendants.map(d => label(d.data, d));
 
   // Compute the layout.
-  const dx = 10;
-  const dy = width / (root.height + padding);
-  tree().nodeSize([dx, dy])(root);
+  const viewboxXPadding = 20;
+  // Количество пикселей для узла по ширине
+  const dx = 400 - viewboxXPadding; 
+  /**
+   * Количество пикселей для каждого уровня дерева 
+   * (root.height высота дерева в смысле количества уровней дерева)
+   */
+  // const dy = width / (root.height + padding); 
+  // const dy = height / (root.height + padding); 
+  const viewboxYPadding = 20;
+  // const dy = (height - viewboxYPadding) / (root.height); 
+  const dy = 200 - viewboxYPadding;
+  tree().nodeSize([dx, dy])(root); 
+  // tree().nodeSize([dy, dx])(root);
 
   // Center the tree.
   let x0 = Infinity;
   let x1 = -x0;
+  let y0 = Infinity;
+  let y1 = -y0;
   root.each(d => {
-    const { x } = d;
-    if(typeof x !== 'number') {
-      return;
+    const { x, y } = d;
+    if(typeof x === 'number') {
+      if (x > x1) x1 = x;
+      if (x < x0) x0 = x;
     }
-    if (x > x1) x1 = x;
-    if (x < x0) x0 = x;
+
+    if(typeof y === 'number') {
+      if (y > y1) y1 = y;
+      if (y < y0) y0 = y;
+    }
   });
 
   // Compute the default height.
-  if (height === undefined) height = x1 - x0 + dx * 2;
+  if (height === undefined) height = y1 - y0 + viewboxYPadding * 2;
+
+  // Compute the default width.
+  if (width === undefined) width = x1 - x0 + viewboxXPadding * 2;
 
   // Use the required curve
   if (typeof curve !== "function") throw new Error(`Unsupported curve`);
 
+  // debugger;
   const svg = d3.create('svg');
   svg
-      .attr("viewBox", [-dy * padding / 2, x0 - dx, width, height])
+      // .attr("viewBox", [-dy * padding / 2, x0 - dx, width, height])
+      // .attr("viewBox", [-dy, x0 - dx, width, height])
+      // .attr("viewBox", [x0 - viewboxXPadding / 2, y0 - viewboxYPadding / 2, width, height])
+      // .attr("viewBox", [x0 - (x1 - x0) / 2, y0 - viewboxYPadding / 2, width, height])
+      .attr("viewBox", [x0 - width / 2 + (x1 - x0) / 2, y0 - viewboxYPadding / 2, width, height])
       .attr("width", width)
       .attr("height", height)
-      .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
       .attr("font-family", "sans-serif")
       .attr("font-size", 10);
 
@@ -143,12 +184,19 @@ function Tree<Datum extends Tree>(
     .selectAll("path")
       .data(root.links())
       .join("path")
+        // .attr("d", d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve)
+        //     .x(d => {
+        //       return d.y ?? 0;
+        //     })
+        //     .y(d => {
+        //       return  d.x ?? 0;
+        //     }));
         .attr("d", d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve)
             .x(d => {
-              return d.y ?? 0;
+              return d.x ?? 0;
             })
             .y(d => {
-              return  d.x ?? 0;
+              return  d.y ?? 0;
             }));
 
   const node = svg.append("g")
@@ -157,7 +205,8 @@ function Tree<Datum extends Tree>(
     .join("a")
       .attr("xlink:href", link == null ? null : d => link(d.data, d))
       .attr("target", link == null ? null : linkTarget)
-      .attr("transform", d => `translate(${d.y},${d.x})`);
+      // .attr("transform", d => `translate(${d.y},${d.x})`);
+      .attr("transform", d => `translate(${d.x},${d.y})`);
 
   node.append("circle")
       .attr("fill", d => d.children ? stroke : fill)
@@ -168,8 +217,10 @@ function Tree<Datum extends Tree>(
 
   if (L) node.append("text")
       .attr("dy", "0.32em")
-      .attr("x", d => d.children ? -6 : 6)
-      .attr("text-anchor", d => d.children ? "end" : "start")
+      // .attr("x", d => d.children ? -6 : 6)
+      .attr("y", (d) => 10)
+      // .attr("text-anchor", d => d.children ? "end" : "start")
+      .attr("text-anchor", d => "middle")
       .attr("paint-order", "stroke")
       .attr("stroke", halo)
       .attr("stroke-width", haloWidth)
@@ -196,7 +247,8 @@ const chart = Tree(genealogy, {
   label: d => d.name,
   title: (d, n) => `${n.ancestors().reverse().map(d => d.data.name).join(".")}`, // hover text
   link: (d, n) => `https://github.com/prefuse/Flare/${n.children ? "tree" : "blob"}/master/flare/src/${n.ancestors().reverse().map(d => d.data.name).join("/")}${n.children ? "" : ".as"}`,
-  width: 1152
+  // width: 1000,
+  // height: 1000
 });
 
 return chart;
@@ -220,11 +272,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div ref="treeRoot"></div>
+  <div class="tree-view-wrapper" ref="treeRoot"></div>
 </template>
 
 <style scoped>
-.read-the-docs {
-  color: #888;
+.tree-view-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
 }
 </style>
