@@ -4,6 +4,7 @@ import * as d3 from 'd3'; // TODO переделать на конкретные
 import {flareJson} from './flare';
 import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout, Selection as D3Selection } from 'd3';
 
+// Базовый пример взял отсюда: https://observablehq.com/@d3/tree-component
 const treeRoot = ref<HTMLElement | null>(null);
 
 type Tree = {
@@ -93,6 +94,7 @@ function Tree<Datum extends Tree>(
 
     root = stratifyOperator(data as unknown as (Datum & {id?: string; parentId?: string})[]);
   } else {
+    // В данный момент используется только эта ветка
     root = d3.hierarchy(data, children);
   }
 
@@ -119,22 +121,18 @@ function Tree<Datum extends Tree>(
   const L = label == null ? null : descendants.map(d => label(d.data, d));
 
   // Compute the layout.
-  const viewboxXPadding = 20;
   // Количество пикселей для узла по ширине
-  const dx = 400 - viewboxXPadding; 
-  /**
-   * Количество пикселей для каждого уровня дерева 
-   * (root.height высота дерева в смысле количества уровней дерева)
-   */
-  // const dy = width / (root.height + padding); 
-  // const dy = height / (root.height + padding); 
-  const viewboxYPadding = 20;
-  // const dy = (height - viewboxYPadding) / (root.height); 
-  const dy = 200 - viewboxYPadding;
+  const dx = 200; 
+
+  // Количество пикселей для каждого уровня дерева
+  const dy = 200;
   tree().nodeSize([dx, dy])(root); 
-  // tree().nodeSize([dy, dx])(root);
+  // tree().nodeSize([dy, dx])(root); 
 
   // Center the tree.
+  /**
+   * Получение минимальных и максимальных границ координат точек дерева
+   */
   let x0 = Infinity;
   let x1 = -x0;
   let y0 = Infinity;
@@ -153,22 +151,26 @@ function Tree<Datum extends Tree>(
   });
 
   // Compute the default height.
+  // Отступ по высоте от границ дерева(узлы и ребра) до границ viewbox
+  const viewboxYPadding = 20;
   if (height === undefined) height = y1 - y0 + viewboxYPadding * 2;
 
   // Compute the default width.
+  // Отступ по ширине от границ дерева(узлы и ребра) до границ viewbox
+  const viewboxXPadding = 20;
   if (width === undefined) width = x1 - x0 + viewboxXPadding * 2;
 
-  // Use the required curve
-  if (typeof curve !== "function") throw new Error(`Unsupported curve`);
+  const minXViewBox = x0 - viewboxXPadding;
 
-  // debugger;
+  const minYViewBox = y0 - viewboxYPadding;
+
   const svg = d3.create('svg');
   svg
       // .attr("viewBox", [-dy * padding / 2, x0 - dx, width, height])
       // .attr("viewBox", [-dy, x0 - dx, width, height])
       // .attr("viewBox", [x0 - viewboxXPadding / 2, y0 - viewboxYPadding / 2, width, height])
       // .attr("viewBox", [x0 - (x1 - x0) / 2, y0 - viewboxYPadding / 2, width, height])
-      .attr("viewBox", [x0 - width / 2 + (x1 - x0) / 2, y0 - viewboxYPadding / 2, width, height])
+      .attr("viewBox", [minXViewBox, minYViewBox, width, height])
       .attr("width", width)
       .attr("height", height)
       .attr("font-family", "sans-serif")
