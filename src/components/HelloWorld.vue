@@ -1,140 +1,150 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import * as d3 from 'd3'; // TODO переделать на конкретные импорты
-import {flareJson} from './flare';
-import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout, Selection as D3Selection } from 'd3';
+// import { flareJson } from './flare';
+import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout } from 'd3';
 
 // Базовый пример взял отсюда: https://observablehq.com/@d3/tree-component
 const treeRoot = ref<HTMLElement | null>(null);
 
-type Tree = {
+type TTree = {
   name: string;
-  children?: Tree[];
-}
+  children?: TTree[];
+};
 
-/**
- * Получение минимальных и максимальных границ координат точек дерева
- */
-function getCoordinateRanges<Datum extends Tree>(root: HierarchyNode<Datum>) {
-  let x0 = Infinity;
-  let x1 = -x0;
-  let y0 = Infinity;
-  let y1 = -y0;
-  root.each(d => {
-    const { x, y } = d;
-    if(typeof x === 'number') {
-      if (x > x1) x1 = x;
-      if (x < x0) x0 = x;
-    }
-
-    if(typeof y === 'number') {
-      if (y > y1) y1 = y;
-      if (y < y0) y0 = y;
-    }
-  });
-  return {
-    x0, x1,
-    y0, y1
-  }
-}
-
-
-type Config<Datum extends Tree> = {
-  mode: 'horizontal' | 'vertical',
+type TreeHierarchyConfig<Datum extends TTree> = {
   path: Parameters<d3.StratifyOperator<Datum>['path']>[0]; // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-  id: (<D extends {id?: string}>(d: D, index: number, data: D[]) => string | undefined) | null; // if tabular data, given a d in data, returns a unique identifier (string)
-  parentId: ((d: {parentId?: string}) => string | undefined) | null; // if tabular data, given a node d, returns its parent’s identifier
+  id: (<D extends { id?: string }>(d: D, index: number, data: D[]) => string | undefined) | null; // if tabular data, given a d in data, returns a unique identifier (string)
+  parentId: ((d: { parentId?: string }) => string | undefined) | null; // if tabular data, given a node d, returns its parent’s identifier
   children: Parameters<typeof d3.hierarchy<Datum>>[1]; // if hierarchical data, given a d in data, returns its children
+};
+
+type Config<Datum extends TTree> = {
+  mode: 'horizontal' | 'vertical';
+  treeHierarchyConfig: TreeHierarchyConfig<Datum>;
   tree: () => TreeLayout<Datum> | ClusterLayout<Datum>; // TODO здесь могут быть любые layout для древовидных структур;// layout algorithm (typically d3.tree or d3.cluster)
   sort: (a: HierarchyNode<Datum>, b: HierarchyNode<Datum>) => number;// how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
-  label: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns the display name
-  title: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns its hover text
-  link: (nodeData: any, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, its link (if any)
+  label: (nodeData: Datum, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns the display name
+  title: (nodeData: Datum, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns its hover text
+  link: (nodeData: Datum, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, its link (if any)
   linkTarget: string;// the target attribute for links (if any)
   width: number;// outer width, in pixels
   height: number;// outer height, in pixels
   dx: number; // Расстояние между узлами на одном уровне по ширине/высоте в зависимости от mode
   dy: number; // Расстояние между узлами на одном уровне по высоте/ширине в зависимости от mode
   radius: number;// radius of nodes
-  padding: number;// horizontal padding for first and last column
   fill: string;// fill for nodes
   stroke: string;// stroke for links
   strokeWidth: number;// stroke width for links
   strokeOpacity: number;
   strokeLinejoin: string;// stroke line join for links
   strokeLinecap: string;// stroke line cap for links
-  halo: string;// color of label halo 
+  halo: string;// color of label halo
   haloWidth: number;// padding around the labels
-  curve: CurveFactory// curve for the link
+  curve: CurveFactory;// curve for the link
+};
+
+/**
+ * Получение минимальных и максимальных границ координат точек дерева
+ */
+function getCoordinateRanges<Datum extends TTree>(root: HierarchyNode<Datum>) {
+  let x0 = Infinity;
+  let x1 = -x0;
+  let y0 = Infinity;
+  let y1 = -y0;
+  root.each((d) => {
+    const { x, y } = d;
+    if (typeof x === 'number') {
+      if (x > x1) x1 = x;
+      if (x < x0) x0 = x;
+    }
+
+    if (typeof y === 'number') {
+      if (y > y1) y1 = y;
+      if (y < y0) y0 = y;
+    }
+  });
+  return {
+    x0, x1,
+    y0, y1,
+  };
 }
 
-function Tree<Datum extends Tree>(
-  data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects)
-{
-  mode = 'horizontal',
-  path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-  id = Array.isArray(data) ? d => d.id : undefined, // if tabular data, given a d in data, returns a unique identifier (string)
-  parentId = Array.isArray(data) ? d => d.parentId : undefined, // if tabular data, given a node d, returns its parent’s identifier
-  children, // if hierarchical data, given a d in data, returns its children
-  tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
-  sort, // how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
-  label, // given a node d, returns the display name
-  title, // given a node d, returns its hover text
-  link, // given a node d, its link (if any)
-  linkTarget = "_blank", // the target attribute for links (if any)
-  width, // outer width, in pixels
-  height, // outer height, in pixels
-  dx = 200,
-  dy = 200,
-  radius = 3, // radius of nodes
-  padding = 1, // horizontal padding for first and last column
-  fill = "#999", // fill for nodes
-  stroke = "#555", // stroke for links
-  strokeWidth = 1.5, // stroke width for links
-  strokeOpacity = 0.4, // stroke opacity for links
-  strokeLinejoin = '', // stroke line join for links
-  strokeLinecap = '', // stroke line cap for links
-  halo = "#fff", // color of label halo 
-  haloWidth = 3, // padding around the labels
-  // curve = d3.curveStepAfter, // ребра с прямыми углами
-  // curve = d3.curveLinear, // Линейные ребра(прямая линия от одной точки до другой)
-  // curve = d3.curveBumpX, // скругленные ребра (радиус скругления похоже как-то зависит от x)
-  // curve = d3.curveBumpY, // скругленные ребра (радиус скругления похоже как-то зависит от y)
-  curve = d3.curveBumpX, // curve for the link
-}: Partial<Config<Datum>> ) {
-
+function createTreeRoot<Datum extends TTree>(
+  data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects),
+  {
+    path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
+    id = Array.isArray(data) ? (d) => d.id : undefined, // if tabular data, given a d in data, returns a unique identifier (string)
+    parentId = Array.isArray(data) ? (d) => d.parentId : undefined, // if tabular data, given a node d, returns its parent’s identifier
+    children, // if hierarchical data, given a d in data, returns its children
+  }: Partial<TreeHierarchyConfig<Datum>>) {
   // If id and parentId options are specified, or the path option, use d3.stratify
   // to convert tabular data to a hierarchy; otherwise we assume that the data is
   // specified as an object {children} with nested objects (a.k.a. the “flare.json”
   // format), and use d3.hierarchy.
   let root: HierarchyNode<Datum>;
 
-  if(path || id || parentId) {
-    const stratifyOperator = d3.stratify<Datum & {id?: string; parentId?: string}>();
-  
-    if(path) {
+  if (path || id || parentId) {
+    const stratifyOperator = d3.stratify<Datum & { id?: string; parentId?: string }>();
+
+    if (path) {
       stratifyOperator.path(path);
     }
 
-    if(id) {
+    if (id) {
       stratifyOperator.id(id);
     }
 
-    if(parentId) {
+    if (parentId) {
       stratifyOperator.parentId(parentId);
     }
 
-    root = stratifyOperator(data as unknown as (Datum & {id?: string; parentId?: string})[]);
+    root = stratifyOperator(data as unknown as (Datum & { id?: string; parentId?: string })[]);
   } else {
     // В данный момент используется только эта ветка
     root = d3.hierarchy(data, children);
   }
 
+  return root;
+}
+
+function Tree<Datum extends TTree>(
+  data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects)
+  config: Partial<Config<Datum>>) {
+  const {
+    mode = 'horizontal',
+    tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
+    sort, // how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
+    label, // given a node d, returns the display name
+    title, // given a node d, returns its hover text
+    link, // given a node d, its link (if any)
+    linkTarget = '_blank', // the target attribute for links (if any)
+    width, // outer width, in pixels
+    height, // outer height, in pixels
+    dx = 200,
+    dy = 200,
+    radius = 3, // radius of nodes
+    fill = '#999', // fill for nodes
+    stroke = '#555', // stroke for links
+    strokeWidth = 1.5, // stroke width for links
+    strokeOpacity = 0.4, // stroke opacity for links
+    strokeLinejoin = '', // stroke line join for links
+    strokeLinecap = '', // stroke line cap for links
+    halo = '#fff', // color of label halo
+    haloWidth = 3, // padding around the labels
+    // curve = d3.curveStepAfter, // ребра с прямыми углами
+    // curve = d3.curveLinear, // Линейные ребра(прямая линия от одной точки до другой)
+    // curve = d3.curveBumpX, // скругленные ребра (радиус скругления похоже как-то зависит от x)
+    // curve = d3.curveBumpY, // скругленные ребра (радиус скругления похоже как-то зависит от y)
+    curve = d3.curveBumpX, // curve for the link
+  } = config;
+
+  const root = createTreeRoot(data, config.treeHierarchyConfig ?? {});
+
   // Sort the nodes.
-  if(sort) {
+  if (sort) {
     root.sort(sort);
   }
-
 
   /**
    * Массив узлов дерева. Порядок определяется по слоям, т.е.
@@ -150,17 +160,17 @@ function Tree<Datum extends Tree>(
    */
   const descendants = root.descendants();
   // Compute labels and titles.
-  const L = label == null ? null : descendants.map(d => label(d.data, d));
+  const L = label == null ? null : descendants.map((d) => label(d.data, d));
 
   // Compute the layout.
-  if(mode === 'horizontal') {
-    tree().nodeSize([dy, dx])(root); 
+  if (mode === 'horizontal') {
+    tree().nodeSize([dy, dx])(root);
   } else {
-    tree().nodeSize([dx, dy])(root); 
+    tree().nodeSize([dx, dy])(root);
   }
 
   // Center the tree.
-  const {x0, x1, y0, y1} = getCoordinateRanges(root);
+  const { x0, x1, y0, y1 } = getCoordinateRanges(root);
 
   // Compute the default height.
   // Отступ по ширине от границ дерева(узлы и ребра) до границ viewbox
@@ -169,33 +179,38 @@ function Tree<Datum extends Tree>(
   const viewboxYPadding = 20;
 
   // Compute the default height.
-  if(height === undefined) {
-    if(mode === 'horizontal') {
-      height = x1 - x0 + viewboxXPadding * 2;
+  let viewBoxHeight: number;
+  if (height === undefined) {
+    if (mode === 'horizontal') {
+      viewBoxHeight = x1 - x0 + viewboxXPadding * 2;
     } else {
-      height = y1 - y0 + viewboxYPadding * 2;
+      viewBoxHeight = y1 - y0 + viewboxYPadding * 2;
     }
+  } else {
+    viewBoxHeight = height;
   }
 
   // Compute the default width.
-  if(width === undefined) {
-    if(mode === 'horizontal') {
-      width = y1 - y0 + viewboxYPadding * 2;
+  let viewBoxWidth: number;
+  if (width === undefined) {
+    if (mode === 'horizontal') {
+      viewBoxWidth = y1 - y0 + viewboxYPadding * 2;
     } else {
-      width = x1 - x0 + viewboxXPadding * 2;
+      viewBoxWidth = x1 - x0 + viewboxXPadding * 2;
     }
+  } else {
+    viewBoxWidth = width;
   }
 
-
   let minXViewBox: number;
-  if(mode === 'horizontal') {
+  if (mode === 'horizontal') {
     minXViewBox = y0 - viewboxYPadding;
   } else {
     minXViewBox = x0 - viewboxXPadding;
   }
 
   let minYViewBox: number;
-  if(mode === 'horizontal') {
+  if (mode === 'horizontal') {
     minYViewBox = x0 - viewboxXPadding;
   } else {
     minYViewBox = y0 - viewboxYPadding;
@@ -203,120 +218,119 @@ function Tree<Datum extends Tree>(
 
   const svg = d3.create('svg');
   svg
-      .attr("viewBox", [minXViewBox, minYViewBox, width, height])
-      .attr("width", width)
-      .attr("height", height)
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 10);
+    .attr('viewBox', [minXViewBox, minYViewBox, viewBoxWidth, viewBoxHeight])
+    .attr('width', viewBoxWidth)
+    .attr('height', viewBoxHeight)
+    .attr('font-family', 'sans-serif')
+    .attr('font-size', 10);
 
   const dLink = d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve);
-  
+
   function getConfiguredLinkCoordinates() {
-    if(mode === 'horizontal') {
-      return dLink.x(d => {
-              return d.y ?? 0;
-            })
-            .y(d => {
-              return  d.x ?? 0;
-            })
+    if (mode === 'horizontal') {
+      return dLink.x((d) => {
+        return d.y ?? 0;
+      })
+        .y((d) => {
+          return d.x ?? 0;
+        });
     } else {
-      return dLink.x(d => {
-              return d.x ?? 0;
-            })
-            .y(d => {
-              return  d.y ?? 0;
-            })
+      return dLink.x((d) => {
+        return d.x ?? 0;
+      })
+        .y((d) => {
+          return d.y ?? 0;
+        });
     }
   }
-  
-  svg.append("g")
-      .attr("fill", "none")
-      .attr("stroke", stroke)
-      .attr("stroke-opacity", strokeOpacity)
-      .attr("stroke-linecap", strokeLinecap)
-      .attr("stroke-linejoin", strokeLinejoin)
-      .attr("stroke-width", strokeWidth)
-    .selectAll("path")
-      .data(root.links())
-      .join("path")
-        .attr("d", getConfiguredLinkCoordinates());
 
-  let nodeTransform: (d: HierarchyNode<Datum>) => string;  
-    
-  if(mode === 'horizontal') {
-    nodeTransform = d => `translate(${d.y},${d.x})`;
+  svg.append('g')
+    .attr('fill', 'none')
+    .attr('stroke', stroke)
+    .attr('stroke-opacity', strokeOpacity)
+    .attr('stroke-linecap', strokeLinecap)
+    .attr('stroke-linejoin', strokeLinejoin)
+    .attr('stroke-width', strokeWidth)
+    .selectAll('path')
+    .data(root.links())
+    .join('path')
+    .attr('d', getConfiguredLinkCoordinates());
+
+  let nodeTransform: (d: HierarchyNode<Datum>) => string;
+
+  if (mode === 'horizontal') {
+    nodeTransform = (d) => `translate(${d.y},${d.x})`;
   } else {
-    nodeTransform = d => `translate(${d.x},${d.y})`;
+    nodeTransform = (d) => `translate(${d.x},${d.y})`;
   }
-  const node = svg.append("g")
-    .selectAll("a")
+  const node = svg.append('g')
+    .selectAll('a')
     .data(root.descendants())
-    .join("a")
-      .attr("xlink:href", link == null ? null : d => link(d.data, d))
-      .attr("target", link == null ? null : linkTarget)
-      .attr("transform", nodeTransform);
+    .join('a')
+    .attr('xlink:href', link == null ? null : (d) => link(d.data, d))
+    .attr('target', link == null ? null : linkTarget)
+    .attr('transform', nodeTransform);
 
-  node.append("circle")
-      .attr("fill", d => d.children ? stroke : fill)
-      .attr("r", radius);
+  node.append('circle')
+    .attr('fill', (d) => d.children ? stroke : fill)
+    .attr('r', radius);
 
-  if (title != null) node.append("title")
-      .text(d => title(d.data, d));
+  if (title != null) node.append('title')
+    .text((d) => title(d.data, d));
 
-  if (L) node.append("text")
-      .attr("dy", "0.32em")
-      // .attr("x", d => d.children ? -6 : 6)
-      .attr("y", (d) => 10)
-      // .attr("text-anchor", d => d.children ? "end" : "start")
-      .attr("text-anchor", d => "middle")
-      .attr("paint-order", "stroke")
-      .attr("stroke", halo)
-      .attr("stroke-width", haloWidth)
-      .text((d, i) => L[i]);
+  if (L) node.append('text')
+    .attr('dy', '0.32em')
+    // .attr('x', (d) => d.children ? -6 : 6)
+    .attr('y', () => 10)
+    // .attr("text-anchor", d => d.children ? "end" : "start")
+    .attr('text-anchor', () => 'middle')
+    .attr('paint-order', 'stroke')
+    .attr('stroke', halo)
+    .attr('stroke-width', haloWidth)
+    .text((_, i) => L[i]);
 
   return svg.node();
 }
 
 function createTree() {
+  const genealogy = {
+    name: 'Eve',
+    children: [
+      { name: 'Cain' },
+      { name: 'Seth', children: [{ name: 'Enos' }, { name: 'Noam' }] },
+      { name: 'Abel' },
+      { name: 'Awan', children: [{ name: 'Enoch' }] },
+      { name: 'Azura' },
+    ],
+  };
 
-const genealogy = {
-  name: "Eve",
-  children: [
-    {name: "Cain"},
-    {name: "Seth", children: [{name: "Enos"}, {name: "Noam"}]},
-    {name: "Abel"},
-    {name: "Awan", children: [{name: "Enoch"}]},
-    {name: "Azura"}
-  ]
-};
+  // const flare = flareJson;
+  const chart = Tree(genealogy, {
+    mode: 'vertical',
+    label: (d) => d.name,
+    title: (_, n) => `${n.ancestors().reverse().map((d) => d.data.name).join('.')}`, // hover text
+    link: (_, n) => `https://github.com/prefuse/Flare/${n.children ? 'tree' : 'blob'}/master/flare/src/${n.ancestors().reverse().map((d) => d.data.name).join('/')}${n.children ? '' : '.as'}`,
+    width: 300,
+    height: 300,
+    dx: 50,
+    dy: 50,
+  });
 
-const flare = flareJson;
-const chart = Tree(genealogy, {
-  mode: 'vertical',
-  label: d => d.name,
-  title: (d, n) => `${n.ancestors().reverse().map(d => d.data.name).join(".")}`, // hover text
-  link: (d, n) => `https://github.com/prefuse/Flare/${n.children ? "tree" : "blob"}/master/flare/src/${n.ancestors().reverse().map(d => d.data.name).join("/")}${n.children ? "" : ".as"}`,
-  // width: 1000,
-  // height: 1000
-});
-
-return chart;
-
+  return chart;
 }
 
 onMounted(() => {
   const treeContainer = treeRoot.value;
-  if(!treeContainer) {
+  if (!treeContainer) {
     return;
   }
   const tree = createTree();
-  if(!tree) {
+  if (!tree) {
     return;
   }
 
   treeContainer.append(tree);
-})
-
+});
 
 </script>
 
