@@ -3,14 +3,12 @@ import { onMounted, ref } from 'vue';
 import * as d3 from 'd3'; // TODO переделать на конкретные импорты
 // import { flareJson } from './flare';
 import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout } from 'd3';
+import type { TTree } from './tree';
+import { RomanovTreePrepared } from './romanov-tree-prepared';
+import { romanovTreeStructure } from './romanov-tree';
 
 // Базовый пример взял отсюда: https://observablehq.com/@d3/tree-component
 const treeRoot = ref<HTMLElement | null>(null);
-
-type TTree = {
-  name: string;
-  children?: TTree[];
-};
 
 type TreeHierarchyConfig<Datum extends TTree> = {
   path: Parameters<d3.StratifyOperator<Datum>['path']>[0]; // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
@@ -53,6 +51,9 @@ function getCoordinateRanges<Datum extends TTree>(root: HierarchyNode<Datum>) {
   let y0 = Infinity;
   let y1 = -y0;
   root.each((d) => {
+    if (d.data.hidden) {
+      return;
+    }
     const { x, y } = d;
     if (typeof x === 'number') {
       if (x > x1) x1 = x;
@@ -244,15 +245,38 @@ function Tree<Datum extends TTree>(
     }
   }
 
-  svg.append('g')
+  const nodes = root.descendants().filter((d) => {
+    return !d.data.hidden;
+  });
+
+  const links = root.links().filter((d) => {
+    return !d.source.data.hidden && !d.target.data.noParent && d.target.data.type === 'person';
+  });
+
+  // TODO в список узлов и ребер можно добавлять элементы.
+  // TODO можно рисовать несколько разных узлов и несколько разных ребер разными способами
+
+  // links.push({
+  //   source: nodes[0],
+  //   target: nodes[2],
+  // });
+
+  // links.push({
+  //   source: nodes[0],
+  //   target: nodes[1],
+  // });
+
+  const elementsContainer = svg.append('g')
     .attr('fill', 'none')
     .attr('stroke', stroke)
     .attr('stroke-opacity', strokeOpacity)
     .attr('stroke-linecap', strokeLinecap)
     .attr('stroke-linejoin', strokeLinejoin)
-    .attr('stroke-width', strokeWidth)
+    .attr('stroke-width', strokeWidth);
+
+  elementsContainer
     .selectAll('path')
-    .data(root.links())
+    .data(links)
     .join('path')
     .attr('d', getConfiguredLinkCoordinates());
 
@@ -265,7 +289,7 @@ function Tree<Datum extends TTree>(
   }
   const node = svg.append('g')
     .selectAll('a')
-    .data(root.descendants())
+    .data(nodes)
     .join('a')
     .attr('xlink:href', link == null ? null : (d) => link(d.data, d))
     .attr('target', link == null ? null : linkTarget)
@@ -273,21 +297,21 @@ function Tree<Datum extends TTree>(
 
   node.append('circle')
     .attr('fill', (d) => d.children ? stroke : fill)
-    .attr('r', radius);
+    .attr('r', (d) => d.data.hidden ? 0 : radius);
 
   if (title != null) node.append('title')
     .text((d) => title(d.data, d));
 
   if (L) node.append('text')
     .attr('dy', '0.32em')
-    // .attr('x', (d) => d.children ? -6 : 6)
     .attr('y', () => 10)
-    // .attr("text-anchor", d => d.children ? "end" : "start")
     .attr('text-anchor', () => 'middle')
     .attr('paint-order', 'stroke')
     .attr('stroke', halo)
     .attr('stroke-width', haloWidth)
-    .text((_, i) => L[i]);
+    .text((d) => {
+      return label?.(d.data, d) ?? null;
+    });
 
   return svg.node();
 }
@@ -304,16 +328,53 @@ function createTree() {
     ],
   };
 
+  const yetAnotherGenealogy = {
+    name: 'God',
+    hidden: true,
+    children: [
+      {
+        name: 'Adam',
+      },
+      {
+        name: 'Eve',
+        children: [
+          {
+            name: 'Kain',
+          },
+        ],
+      },
+    ],
+  };
+
+  const plainGenealogy = [
+    {
+      name: 'Mother',
+      id: 0,
+      parentId: null,
+    },
+    {
+      name: 'Father',
+      id: 1,
+      parentId: null,
+    },
+    {
+      name: 'Child',
+      id: 0,
+      parentId: null,
+    },
+  ];
+
   // const flare = flareJson;
-  const chart = Tree(genealogy, {
+  debugger;
+  const chart = Tree(romanovTreeStructure, {
     mode: 'vertical',
     label: (d) => d.name,
     title: (_, n) => `${n.ancestors().reverse().map((d) => d.data.name).join('.')}`, // hover text
     link: (_, n) => `https://github.com/prefuse/Flare/${n.children ? 'tree' : 'blob'}/master/flare/src/${n.ancestors().reverse().map((d) => d.data.name).join('/')}${n.children ? '' : '.as'}`,
-    width: 300,
-    height: 300,
-    dx: 50,
-    dy: 50,
+    // width: 300,
+    // height: 300,
+    dx: 100,
+    dy: 100,
   });
 
   return chart;
