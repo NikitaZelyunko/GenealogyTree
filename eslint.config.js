@@ -13,6 +13,8 @@ const stylisticConfig = stylistic.configs.customize(
   },
 );
 
+stylisticConfig.rules['@stylistic/max-len'] = ['error', { code: 120 }];
+
 export default defineConfig([
   { files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'], plugins: { js }, extends: ['js/recommended'] },
   { files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'], languageOptions: { globals: globals.browser } },
