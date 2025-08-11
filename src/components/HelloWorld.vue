@@ -193,11 +193,10 @@ function Tree<Datum extends TTree>(
   let maxRightBorder = Number.NEGATIVE_INFINITY;
   let minLeftBorder = Number.POSITIVE_INFINITY;
 
+  let yOffset = 0;
+
   // TODO сделать за один проход дерева все операции(см getCoordinateRanges)
   root.each((node) => {
-    if(node.data.name === 'Екатерина Долгорукова') {
-      debugger;
-    }
     const nameLength = node.data.name.length;
     const neededSpace = nameLength * perCharSize;
     const halfNeededSpace = Math.round(neededSpace / 2);
@@ -207,6 +206,8 @@ function Tree<Datum extends TTree>(
       maxRightBorder = Math.max(maxRightBorder, prevRightBorder ?? Number.NEGATIVE_INFINITY);
       minLeftBorder = Math.min(minLeftBorder, Math.floor(node.x ?? 0 - halfNeededSpace));
       prevRightBorder = undefined;
+
+      yOffset = (node.depth - 1) * Math.floor(yNodeSize / 4);
     }
 
     const nodeTextCenter = node.x ?? 0;
@@ -221,6 +222,8 @@ function Tree<Datum extends TTree>(
     const notEnoughSpace = neededSpace > xNodeSize ? neededSpace - xNodeSize: 0;
     node.x = leftOffset + nodeTextCenter + Math.round(notEnoughSpace / 2);
     prevRightBorder = node.x + halfNeededSpace;
+
+    node.y= (node.y ?? 0) - yOffset; 
   });
 
   // Center the tree.
