@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import * as d3 from 'd3'; // TODO переделать на конкретные импорты
 // import { flareJson } from './flare';
-import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout } from 'd3';
+import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout, HierarchyLink } from 'd3';
 import type { TTree } from './tree';
 import { RomanovTreePrepared } from './romanov-tree-prepared';
 import { romanovTreeStructure } from './romanov-tree';
@@ -164,24 +164,75 @@ function Tree<Datum extends TTree>(
   const L = label == null ? null : descendants.map((d) => label(d.data, d));
 
   const treeElement = tree().separation((aNode, bNode) => {
-    if(aNode.data.name.length >=18) {
-      return 1.1;
-    }
-    if(bNode.data.name.length >=18) {
-      return 1.1;
-    }
+    // if(aNode.data.name.length >=18) {
+    //   return 1.1;
+    // }
+    // if(bNode.data.name.length >=18) {
+    //   return 1.1;
+    // }
     return 1;
   })
 
-  // Compute the layout.
+  let xNodeSize: number;
+  let yNodeSize: number;
+
   if (mode === 'horizontal') {
-    treeElement.nodeSize([dy, dx])(root);
+    xNodeSize = dy;
+    yNodeSize = dx;
   } else {
-    treeElement.nodeSize([dx, dy])(root);
+    xNodeSize = dx;
+    yNodeSize = dy;
   }
 
+  // Compute the layout.
+  treeElement.nodeSize([xNodeSize, yNodeSize])(root);
+
+  let currentDepth: number | undefined = undefined;
+  let prevRightBorder: number | undefined = undefined;
+  const perCharSize = 6;
+  let maxRightBorder = Number.NEGATIVE_INFINITY;
+  let minLeftBorder = Number.POSITIVE_INFINITY;
+
+  // TODO сделать за один проход дерева все операции(см getCoordinateRanges)
+  root.each((node) => {
+    if(node.data.name === 'Екатерина Долгорукова') {
+      debugger;
+    }
+    const nameLength = node.data.name.length;
+    const neededSpace = nameLength * perCharSize;
+    const halfNeededSpace = Math.round(neededSpace / 2);
+    
+    if(currentDepth !== node.depth) {
+      currentDepth = node.depth;
+      maxRightBorder = Math.max(maxRightBorder, prevRightBorder ?? Number.NEGATIVE_INFINITY);
+      minLeftBorder = Math.min(minLeftBorder, Math.floor(node.x ?? 0 - halfNeededSpace));
+      prevRightBorder = undefined;
+    }
+
+    const nodeTextCenter = node.x ?? 0;
+    const nodeTextLeftBorder = nodeTextCenter - halfNeededSpace;
+
+    let leftOffset = 0;
+    
+    if(prevRightBorder !== undefined && prevRightBorder >= nodeTextLeftBorder) {
+      leftOffset = prevRightBorder - nodeTextLeftBorder;
+    }
+
+    const notEnoughSpace = neededSpace > xNodeSize ? neededSpace - xNodeSize: 0;
+    node.x = leftOffset + nodeTextCenter + Math.round(notEnoughSpace / 2);
+    prevRightBorder = node.x + halfNeededSpace;
+  });
+
   // Center the tree.
-  const { x0, x1, y0, y1 } = getCoordinateRanges(root);
+  let { x0, x1, y0, y1 } = getCoordinateRanges(root);
+
+  if(x1 < maxRightBorder) {
+    x1 = maxRightBorder;
+  }
+
+  if(x0 > minLeftBorder) {
+    x0 = minLeftBorder;
+  }
 
   // Compute the default height.
   // Отступ по ширине от границ дерева(узлы и ребра) до границ viewbox
@@ -226,6 +277,7 @@ function Tree<Datum extends TTree>(
   } else {
     minYViewBox = y0 - viewboxYPadding;
   }
+
 
   const svg = d3.create('svg');
   svg
@@ -327,8 +379,6 @@ function Tree<Datum extends TTree>(
     .join('path')
     .attr('d', getConfiguredLinkCoordinates(dLink));
 
-  const marriageLink = d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(d3.curveBumpY);
-
   const marriageNodesContainer = svg.append('g')
     .attr('fill', 'none')
     .attr('stroke', stroke)
@@ -337,17 +387,22 @@ function Tree<Datum extends TTree>(
     .attr('stroke-linejoin', strokeLinejoin)
     .attr('stroke-width', strokeWidth);
 
+    const createCurveBumpYWithOffset = function({startOffset}: {startOffset: number}) {
+      return (link: HierarchyLink<Datum>) => {
+        const {x: sourceX = 0, y: sourceY = 0} = link.source;
+        const {x: targetX = 0, y: targetY = 0} = link.target;
+        const line = d3.line((d) => d[0], (d) => d[1]);
+        line.curve(curve);
+        return line([[sourceX, sourceY], [sourceX, sourceY + startOffset], [targetX, targetY]]);
+      };
+    }
+
+  const toMarriageNodeCurve = createCurveBumpYWithOffset({startOffset: 30});
   marriageNodesContainer
     .selectAll('path')
     .data(personToMarriageLinks)
     .join('path')
-    .attr('d', (link) => {
-      const {x: sourceX = 0, y: sourceY = 0} = link.source;
-      const {x: targetX = 0, y: targetY = 0} = link.target;
-      const line = d3.line((d) => d[0], (d) => d[1]);
-      line.curve(d3.curveBumpY);
-      return line([[sourceX, sourceY], [sourceX, sourceY + 30], [targetX, targetY]]);
-    });
+    .attr('d', toMarriageNodeCurve);
 
   let nodeTransform: (d: HierarchyNode<Datum>) => string;
 
