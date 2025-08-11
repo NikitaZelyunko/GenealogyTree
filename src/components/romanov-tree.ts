@@ -559,6 +559,10 @@ function createFullTreeStructure(genealogy: Genealogy, startPersonId: number) {
     return {
       name: person.name,
       type: 'person',
+      noParent: person.parentsRelationId === null,
+      data: {
+        personId: person.id,
+      }
     };
   }
 
@@ -569,6 +573,7 @@ function createFullTreeStructure(genealogy: Genealogy, startPersonId: number) {
       centerNode = {
         name: '',
         type: 'person',
+        hidden: true,
         noParent: true,
       };
       nodes.splice(centerIndex, 0, centerNode);
@@ -584,6 +589,9 @@ function createFullTreeStructure(genealogy: Genealogy, startPersonId: number) {
       noParent: true,
       name: '',
       type: 'marriage',
+      data: {
+        marriage,
+      }
     };
   }
 

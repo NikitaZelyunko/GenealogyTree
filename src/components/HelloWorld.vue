@@ -163,11 +163,21 @@ function Tree<Datum extends TTree>(
   // Compute labels and titles.
   const L = label == null ? null : descendants.map((d) => label(d.data, d));
 
+  const treeElement = tree().separation((aNode, bNode) => {
+    if(aNode.data.name.length >=18) {
+      return 1.1;
+    }
+    if(bNode.data.name.length >=18) {
+      return 1.1;
+    }
+    return 1;
+  })
+
   // Compute the layout.
   if (mode === 'horizontal') {
-    tree().nodeSize([dy, dx])(root);
+    treeElement.nodeSize([dy, dx])(root);
   } else {
-    tree().nodeSize([dx, dy])(root);
+    treeElement.nodeSize([dx, dy])(root);
   }
 
   // Center the tree.
@@ -227,16 +237,18 @@ function Tree<Datum extends TTree>(
 
   const dLink = d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve);
 
-  function getConfiguredLinkCoordinates() {
+  function getConfiguredLinkCoordinates(
+    linkConfig: d3.Link<any, d3.HierarchyLink<Datum>, d3.HierarchyNode<Datum>>
+  ) {
     if (mode === 'horizontal') {
-      return dLink.x((d) => {
+      return linkConfig.x((d) => {
         return d.y ?? 0;
       })
         .y((d) => {
           return d.x ?? 0;
         });
     } else {
-      return dLink.x((d) => {
+      return linkConfig.x((d) => {
         return d.x ?? 0;
       })
         .y((d) => {
@@ -253,6 +265,41 @@ function Tree<Datum extends TTree>(
     return !d.source.data.hidden && !d.target.data.noParent && d.target.data.type === 'person';
   });
 
+  const {marriagesNodes, personIdToNodeMap} = nodes.reduce<{
+    marriagesNodes: d3.HierarchyNode<Datum>[],
+    personIdToNodeMap: Record<number, d3.HierarchyNode<Datum>>
+    }>((acc, node) => {
+      if(node.data.type === 'person') {
+        acc.personIdToNodeMap[node.data.data.personId] = node;
+      } else if(node.data.type === 'marriage') {
+        acc.marriagesNodes.push(node);
+      }
+      return acc;
+  }, {marriagesNodes: [], personIdToNodeMap: {}});
+
+  const personToMarriageLinks = marriagesNodes.reduce((acc, node) => {
+    const marriageData = node.data.data.marriage;
+
+    const {firstPersonId, secondPersonId} = marriageData;
+
+    const firstPersonNode = personIdToNodeMap[firstPersonId];
+    const secondPersonNode = personIdToNodeMap[secondPersonId];
+
+    acc.push({
+      source: firstPersonNode,
+      target: node,
+    });
+
+    acc.push({
+      source: secondPersonNode,
+      target: node
+    });
+    return acc;
+  }, [] as d3.HierarchyLink<Datum>[]);
+
+
+  // links.push(...personToMarriageLinks)
+
   // TODO в список узлов и ребер можно добавлять элементы.
   // TODO можно рисовать несколько разных узлов и несколько разных ребер разными способами
 
@@ -266,7 +313,7 @@ function Tree<Datum extends TTree>(
   //   target: nodes[1],
   // });
 
-  const elementsContainer = svg.append('g')
+  const nodesContainer = svg.append('g')
     .attr('fill', 'none')
     .attr('stroke', stroke)
     .attr('stroke-opacity', strokeOpacity)
@@ -274,11 +321,33 @@ function Tree<Datum extends TTree>(
     .attr('stroke-linejoin', strokeLinejoin)
     .attr('stroke-width', strokeWidth);
 
-  elementsContainer
+  nodesContainer
     .selectAll('path')
     .data(links)
     .join('path')
-    .attr('d', getConfiguredLinkCoordinates());
+    .attr('d', getConfiguredLinkCoordinates(dLink));
+
+  const marriageLink = d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(d3.curveBumpY);
+
+  const marriageNodesContainer = svg.append('g')
+    .attr('fill', 'none')
+    .attr('stroke', stroke)
+    .attr('stroke-opacity', strokeOpacity)
+    .attr('stroke-linecap', strokeLinecap)
+    .attr('stroke-linejoin', strokeLinejoin)
+    .attr('stroke-width', strokeWidth);
+
+  marriageNodesContainer
+    .selectAll('path')
+    .data(personToMarriageLinks)
+    .join('path')
+    .attr('d', (link) => {
+      const {x: sourceX = 0, y: sourceY = 0} = link.source;
+      const {x: targetX = 0, y: targetY = 0} = link.target;
+      const line = d3.line((d) => d[0], (d) => d[1]);
+      line.curve(d3.curveBumpY);
+      return line([[sourceX, sourceY], [sourceX, sourceY + 30], [targetX, targetY]]);
+    });
 
   let nodeTransform: (d: HierarchyNode<Datum>) => string;
 
