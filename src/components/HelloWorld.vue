@@ -5,7 +5,7 @@ import * as d3 from 'd3'; // TODO переделать на конкретные
 import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout, HierarchyLink } from 'd3';
 import type { TTree } from './tree';
 import { RomanovTreePrepared } from './romanov-tree-prepared';
-import { romanovTreeStructure } from './romanov-tree';
+import { getRomanovTreeStructure } from './romanov-tree';
 
 // Базовый пример взял отсюда: https://observablehq.com/@d3/tree-component
 const treeRoot = ref<HTMLElement | null>(null);
@@ -136,8 +136,8 @@ function Tree<Datum extends TTree>(
     // curve = d3.curveStepAfter, // ребра с прямыми углами
     // curve = d3.curveLinear, // Линейные ребра(прямая линия от одной точки до другой)
     // curve = d3.curveBumpX, // скругленные ребра (радиус скругления похоже как-то зависит от x)
-    // curve = d3.curveBumpY, // скругленные ребра (радиус скругления похоже как-то зависит от y)
-    curve = d3.curveBumpX, // curve for the link
+    curve = d3.curveBumpY, // скругленные ребра (радиус скругления похоже как-то зависит от y)
+    // curve = d3.curveBumpX, // curve for the link
   } = config;
 
   const root = createTreeRoot(data, config.treeHierarchyConfig ?? {});
@@ -207,7 +207,7 @@ function Tree<Datum extends TTree>(
       minLeftBorder = Math.min(minLeftBorder, Math.floor(node.x ?? 0 - halfNeededSpace));
       prevRightBorder = undefined;
 
-      yOffset = (node.depth - 1) * Math.floor(yNodeSize / 4);
+      // yOffset = (node.depth - 1) * Math.floor(yNodeSize / 4);
     }
 
     const nodeTextCenter = node.x ?? 0;
@@ -239,7 +239,7 @@ function Tree<Datum extends TTree>(
 
   // Compute the default height.
   // Отступ по ширине от границ дерева(узлы и ребра) до границ viewbox
-  const viewboxXPadding = 20;
+  const viewboxXPadding = 40;
   // Отступ по высоте от границ дерева(узлы и ребра) до границ viewbox
   const viewboxYPadding = 20;
 
@@ -493,7 +493,7 @@ function createTree() {
 
   // const flare = flareJson;
   debugger;
-  const chart = Tree(romanovTreeStructure, {
+  const chart = Tree(getRomanovTreeStructure({childrenAlign: 'parent', groupMarriagesBy: 'firstPersonId'}), {
     mode: 'vertical',
     label: (d) => d.name,
     title: (_, n) => `${n.ancestors().reverse().map((d) => d.data.name).join('.')}`, // hover text
