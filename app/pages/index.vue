@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue';
 </script>
 
 <template>
-  <HelloWorld />
+  <NuxtLayout name="desktop-default">
+    <NuxtPage></NuxtPage>
+  </NuxtLayout>
 </template>
 
 <style scoped>
