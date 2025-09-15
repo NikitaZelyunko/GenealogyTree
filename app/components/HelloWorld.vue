@@ -2,7 +2,13 @@
 import { onMounted, ref } from 'vue';
 import * as d3 from 'd3'; // TODO переделать на конкретные импорты
 // import { flareJson } from './flare';
-import type { CurveFactory, HierarchyNode, ClusterLayout, TreeLayout, HierarchyLink } from 'd3';
+import type {
+  CurveFactory,
+  HierarchyNode,
+  ClusterLayout,
+  TreeLayout,
+  HierarchyLink,
+} from 'd3';
 import type { TTree } from './tree';
 import { RomanovTreePrepared } from './romanov-tree-prepared';
 import { getRomanovTreeStructure } from './romanov-tree';
@@ -12,7 +18,13 @@ const treeRoot = ref<HTMLElement | null>(null);
 
 type TreeHierarchyConfig<Datum extends TTree> = {
   path: Parameters<d3.StratifyOperator<Datum>['path']>[0]; // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-  id: (<D extends { id?: string }>(d: D, index: number, data: D[]) => string | undefined) | null; // if tabular data, given a d in data, returns a unique identifier (string)
+  id:
+    | (<D extends { id?: string }>(
+        d: D,
+        index: number,
+        data: D[],
+      ) => string | undefined)
+    | null; // if tabular data, given a d in data, returns a unique identifier (string)
   parentId: ((d: { parentId?: string }) => string | undefined) | null; // if tabular data, given a node d, returns its parent’s identifier
   children: Parameters<typeof d3.hierarchy<Datum>>[1]; // if hierarchical data, given a d in data, returns its children
 };
@@ -21,25 +33,25 @@ type Config<Datum extends TTree> = {
   mode: 'horizontal' | 'vertical';
   treeHierarchyConfig: TreeHierarchyConfig<Datum>;
   tree: () => TreeLayout<Datum> | ClusterLayout<Datum>; // TODO здесь могут быть любые layout для древовидных структур;// layout algorithm (typically d3.tree or d3.cluster)
-  sort: (a: HierarchyNode<Datum>, b: HierarchyNode<Datum>) => number;// how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
+  sort: (a: HierarchyNode<Datum>, b: HierarchyNode<Datum>) => number; // how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
   label: (nodeData: Datum, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns the display name
   title: (nodeData: Datum, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, returns its hover text
   link: (nodeData: Datum, node: HierarchyNode<Datum>) => string; // TODO тут вместо string могут быть number, boolean и т.д// given a node d, its link (if any)
-  linkTarget: string;// the target attribute for links (if any)
-  width: number;// outer width, in pixels
-  height: number;// outer height, in pixels
+  linkTarget: string; // the target attribute for links (if any)
+  width: number; // outer width, in pixels
+  height: number; // outer height, in pixels
   dx: number; // Расстояние между узлами на одном уровне по ширине/высоте в зависимости от mode
   dy: number; // Расстояние между узлами на одном уровне по высоте/ширине в зависимости от mode
-  radius: number;// radius of nodes
-  fill: string;// fill for nodes
-  stroke: string;// stroke for links
-  strokeWidth: number;// stroke width for links
+  radius: number; // radius of nodes
+  fill: string; // fill for nodes
+  stroke: string; // stroke for links
+  strokeWidth: number; // stroke width for links
   strokeOpacity: number;
-  strokeLinejoin: string;// stroke line join for links
-  strokeLinecap: string;// stroke line cap for links
-  halo: string;// color of label halo
-  haloWidth: number;// padding around the labels
-  curve: CurveFactory;// curve for the link
+  strokeLinejoin: string; // stroke line join for links
+  strokeLinecap: string; // stroke line cap for links
+  halo: string; // color of label halo
+  haloWidth: number; // padding around the labels
+  curve: CurveFactory; // curve for the link
 };
 
 /**
@@ -66,8 +78,10 @@ function getCoordinateRanges<Datum extends TTree>(root: HierarchyNode<Datum>) {
     }
   });
   return {
-    x0, x1,
-    y0, y1,
+    x0,
+    x1,
+    y0,
+    y1,
   };
 }
 
@@ -78,7 +92,8 @@ function createTreeRoot<Datum extends TTree>(
     id = Array.isArray(data) ? (d) => d.id : undefined, // if tabular data, given a d in data, returns a unique identifier (string)
     parentId = Array.isArray(data) ? (d) => d.parentId : undefined, // if tabular data, given a node d, returns its parent’s identifier
     children, // if hierarchical data, given a d in data, returns its children
-  }: Partial<TreeHierarchyConfig<Datum>>) {
+  }: Partial<TreeHierarchyConfig<Datum>>,
+) {
   // If id and parentId options are specified, or the path option, use d3.stratify
   // to convert tabular data to a hierarchy; otherwise we assume that the data is
   // specified as an object {children} with nested objects (a.k.a. the “flare.json”
@@ -86,7 +101,9 @@ function createTreeRoot<Datum extends TTree>(
   let root: HierarchyNode<Datum>;
 
   if (path || id || parentId) {
-    const stratifyOperator = d3.stratify<Datum & { id?: string; parentId?: string }>();
+    const stratifyOperator = d3.stratify<
+      Datum & { id?: string; parentId?: string }
+    >();
 
     if (path) {
       stratifyOperator.path(path);
@@ -100,7 +117,9 @@ function createTreeRoot<Datum extends TTree>(
       stratifyOperator.parentId(parentId);
     }
 
-    root = stratifyOperator(data as unknown as (Datum & { id?: string; parentId?: string })[]);
+    root = stratifyOperator(
+      data as unknown as (Datum & { id?: string; parentId?: string })[],
+    );
   } else {
     // В данный момент используется только эта ветка
     root = d3.hierarchy(data, children);
@@ -111,7 +130,8 @@ function createTreeRoot<Datum extends TTree>(
 
 function Tree<Datum extends TTree>(
   data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects)
-  config: Partial<Config<Datum>>) {
+  config: Partial<Config<Datum>>,
+) {
   const {
     mode = 'horizontal',
     tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
@@ -171,7 +191,7 @@ function Tree<Datum extends TTree>(
     //   return 1.1;
     // }
     return 1;
-  })
+  });
 
   let xNodeSize: number;
   let yNodeSize: number;
@@ -200,11 +220,17 @@ function Tree<Datum extends TTree>(
     const nameLength = node.data.name.length;
     const neededSpace = nameLength * perCharSize;
     const halfNeededSpace = Math.round(neededSpace / 2);
-    
-    if(currentDepth !== node.depth) {
+
+    if (currentDepth !== node.depth) {
       currentDepth = node.depth;
-      maxRightBorder = Math.max(maxRightBorder, prevRightBorder ?? Number.NEGATIVE_INFINITY);
-      minLeftBorder = Math.min(minLeftBorder, Math.floor(node.x ?? 0 - halfNeededSpace));
+      maxRightBorder = Math.max(
+        maxRightBorder,
+        prevRightBorder ?? Number.NEGATIVE_INFINITY,
+      );
+      minLeftBorder = Math.min(
+        minLeftBorder,
+        Math.floor(node.x ?? 0 - halfNeededSpace),
+      );
       prevRightBorder = undefined;
 
       // yOffset = (node.depth - 1) * Math.floor(yNodeSize / 4);
@@ -214,26 +240,30 @@ function Tree<Datum extends TTree>(
     const nodeTextLeftBorder = nodeTextCenter - halfNeededSpace;
 
     let leftOffset = 0;
-    
-    if(prevRightBorder !== undefined && prevRightBorder >= nodeTextLeftBorder) {
+
+    if (
+      prevRightBorder !== undefined &&
+      prevRightBorder >= nodeTextLeftBorder
+    ) {
       leftOffset = prevRightBorder - nodeTextLeftBorder;
     }
 
-    const notEnoughSpace = neededSpace > xNodeSize ? neededSpace - xNodeSize: 0;
+    const notEnoughSpace =
+      neededSpace > xNodeSize ? neededSpace - xNodeSize : 0;
     node.x = leftOffset + nodeTextCenter + Math.round(notEnoughSpace / 2);
     prevRightBorder = node.x + halfNeededSpace;
 
-    node.y= (node.y ?? 0) - yOffset; 
+    node.y = (node.y ?? 0) - yOffset;
   });
 
   // Center the tree.
   let { x0, x1, y0, y1 } = getCoordinateRanges(root);
 
-  if(x1 < maxRightBorder) {
+  if (x1 < maxRightBorder) {
     x1 = maxRightBorder;
   }
 
-  if(x0 > minLeftBorder) {
+  if (x0 > minLeftBorder) {
     x0 = minLeftBorder;
   }
 
@@ -281,7 +311,6 @@ function Tree<Datum extends TTree>(
     minYViewBox = y0 - viewboxYPadding;
   }
 
-
   const svg = d3.create('svg');
   svg
     .attr('viewBox', [minXViewBox, minYViewBox, viewBoxWidth, viewBoxHeight])
@@ -293,19 +322,21 @@ function Tree<Datum extends TTree>(
   const dLink = d3.link<d3.HierarchyLink<Datum>, HierarchyNode<Datum>>(curve);
 
   function getConfiguredLinkCoordinates(
-    linkConfig: d3.Link<any, d3.HierarchyLink<Datum>, d3.HierarchyNode<Datum>>
+    linkConfig: d3.Link<any, d3.HierarchyLink<Datum>, d3.HierarchyNode<Datum>>,
   ) {
     if (mode === 'horizontal') {
-      return linkConfig.x((d) => {
-        return d.y ?? 0;
-      })
+      return linkConfig
+        .x((d) => {
+          return d.y ?? 0;
+        })
         .y((d) => {
           return d.x ?? 0;
         });
     } else {
-      return linkConfig.x((d) => {
-        return d.x ?? 0;
-      })
+      return linkConfig
+        .x((d) => {
+          return d.x ?? 0;
+        })
         .y((d) => {
           return d.y ?? 0;
         });
@@ -317,25 +348,32 @@ function Tree<Datum extends TTree>(
   });
 
   const links = root.links().filter((d) => {
-    return !d.source.data.hidden && !d.target.data.noParent && d.target.data.type === 'person';
+    return (
+      !d.source.data.hidden &&
+      !d.target.data.noParent &&
+      d.target.data.type === 'person'
+    );
   });
 
-  const {marriagesNodes, personIdToNodeMap} = nodes.reduce<{
-    marriagesNodes: d3.HierarchyNode<Datum>[],
-    personIdToNodeMap: Record<number, d3.HierarchyNode<Datum>>
-    }>((acc, node) => {
-      if(node.data.type === 'person') {
+  const { marriagesNodes, personIdToNodeMap } = nodes.reduce<{
+    marriagesNodes: d3.HierarchyNode<Datum>[];
+    personIdToNodeMap: Record<number, d3.HierarchyNode<Datum>>;
+  }>(
+    (acc, node) => {
+      if (node.data.type === 'person') {
         acc.personIdToNodeMap[node.data.data.personId] = node;
-      } else if(node.data.type === 'marriage') {
+      } else if (node.data.type === 'marriage') {
         acc.marriagesNodes.push(node);
       }
       return acc;
-  }, {marriagesNodes: [], personIdToNodeMap: {}});
+    },
+    { marriagesNodes: [], personIdToNodeMap: {} },
+  );
 
   const personToMarriageLinks = marriagesNodes.reduce((acc, node) => {
     const marriageData = node.data.data.marriage;
 
-    const {firstPersonId, secondPersonId} = marriageData;
+    const { firstPersonId, secondPersonId } = marriageData;
 
     const firstPersonNode = personIdToNodeMap[firstPersonId];
     const secondPersonNode = personIdToNodeMap[secondPersonId];
@@ -347,11 +385,10 @@ function Tree<Datum extends TTree>(
 
     acc.push({
       source: secondPersonNode,
-      target: node
+      target: node,
     });
     return acc;
   }, [] as d3.HierarchyLink<Datum>[]);
-
 
   // links.push(...personToMarriageLinks)
 
@@ -368,7 +405,8 @@ function Tree<Datum extends TTree>(
   //   target: nodes[1],
   // });
 
-  const nodesContainer = svg.append('g')
+  const nodesContainer = svg
+    .append('g')
     .attr('fill', 'none')
     .attr('stroke', stroke)
     .attr('stroke-opacity', strokeOpacity)
@@ -382,7 +420,8 @@ function Tree<Datum extends TTree>(
     .join('path')
     .attr('d', getConfiguredLinkCoordinates(dLink));
 
-  const marriageNodesContainer = svg.append('g')
+  const marriageNodesContainer = svg
+    .append('g')
     .attr('fill', 'none')
     .attr('stroke', stroke)
     .attr('stroke-opacity', strokeOpacity)
@@ -390,17 +429,28 @@ function Tree<Datum extends TTree>(
     .attr('stroke-linejoin', strokeLinejoin)
     .attr('stroke-width', strokeWidth);
 
-    const createCurveBumpYWithOffset = function({startOffset}: {startOffset: number}) {
-      return (link: HierarchyLink<Datum>) => {
-        const {x: sourceX = 0, y: sourceY = 0} = link.source;
-        const {x: targetX = 0, y: targetY = 0} = link.target;
-        const line = d3.line((d) => d[0], (d) => d[1]);
-        line.curve(curve);
-        return line([[sourceX, sourceY], [sourceX, sourceY + startOffset], [targetX, targetY]]);
-      };
-    }
+  const createCurveBumpYWithOffset = function ({
+    startOffset,
+  }: {
+    startOffset: number;
+  }) {
+    return (link: HierarchyLink<Datum>) => {
+      const { x: sourceX = 0, y: sourceY = 0 } = link.source;
+      const { x: targetX = 0, y: targetY = 0 } = link.target;
+      const line = d3.line(
+        (d) => d[0],
+        (d) => d[1],
+      );
+      line.curve(curve);
+      return line([
+        [sourceX, sourceY],
+        [sourceX, sourceY + startOffset],
+        [targetX, targetY],
+      ]);
+    };
+  };
 
-  const toMarriageNodeCurve = createCurveBumpYWithOffset({startOffset: 30});
+  const toMarriageNodeCurve = createCurveBumpYWithOffset({ startOffset: 30 });
   marriageNodesContainer
     .selectAll('path')
     .data(personToMarriageLinks)
@@ -414,7 +464,8 @@ function Tree<Datum extends TTree>(
   } else {
     nodeTransform = (d) => `translate(${d.x},${d.y})`;
   }
-  const node = svg.append('g')
+  const node = svg
+    .append('g')
     .selectAll('a')
     .data(nodes)
     .join('a')
@@ -422,23 +473,25 @@ function Tree<Datum extends TTree>(
     .attr('target', link == null ? null : linkTarget)
     .attr('transform', nodeTransform);
 
-  node.append('circle')
-    .attr('fill', (d) => d.children ? stroke : fill)
-    .attr('r', (d) => d.data.hidden ? 0 : radius);
+  node
+    .append('circle')
+    .attr('fill', (d) => (d.children ? stroke : fill))
+    .attr('r', (d) => (d.data.hidden ? 0 : radius));
 
-  if (title != null) node.append('title')
-    .text((d) => title(d.data, d));
+  if (title != null) node.append('title').text((d) => title(d.data, d));
 
-  if (L) node.append('text')
-    .attr('dy', '0.32em')
-    .attr('y', () => 10)
-    .attr('text-anchor', () => 'middle')
-    .attr('paint-order', 'stroke')
-    .attr('stroke', halo)
-    .attr('stroke-width', haloWidth)
-    .text((d) => {
-      return label?.(d.data, d) ?? null;
-    });
+  if (L)
+    node
+      .append('text')
+      .attr('dy', '0.32em')
+      .attr('y', () => 10)
+      .attr('text-anchor', () => 'middle')
+      .attr('paint-order', 'stroke')
+      .attr('stroke', halo)
+      .attr('stroke-width', haloWidth)
+      .text((d) => {
+        return label?.(d.data, d) ?? null;
+      });
 
   return svg.node();
 }
@@ -492,16 +545,32 @@ function createTree() {
   ];
 
   // const flare = flareJson;
-  const chart = Tree(getRomanovTreeStructure({childrenAlign: 'parent', groupMarriagesBy: 'firstPersonId'}), {
-    mode: 'vertical',
-    label: (d) => d.name,
-    title: (_, n) => `${n.ancestors().reverse().map((d) => d.data.name).join('.')}`, // hover text
-    link: (_, n) => `https://github.com/prefuse/Flare/${n.children ? 'tree' : 'blob'}/master/flare/src/${n.ancestors().reverse().map((d) => d.data.name).join('/')}${n.children ? '' : '.as'}`,
-    // width: 300,
-    // height: 300,
-    dx: 100,
-    dy: 100,
-  });
+  const chart = Tree(
+    getRomanovTreeStructure({
+      childrenAlign: 'parent',
+      groupMarriagesBy: 'firstPersonId',
+    }),
+    {
+      mode: 'vertical',
+      label: (d) => d.name,
+      title: (_, n) =>
+        `${n
+          .ancestors()
+          .reverse()
+          .map((d) => d.data.name)
+          .join('.')}`, // hover text
+      link: (_, n) =>
+        `https://github.com/prefuse/Flare/${n.children ? 'tree' : 'blob'}/master/flare/src/${n
+          .ancestors()
+          .reverse()
+          .map((d) => d.data.name)
+          .join('/')}${n.children ? '' : '.as'}`,
+      // width: 300,
+      // height: 300,
+      dx: 100,
+      dy: 100,
+    },
+  );
 
   return chart;
 }
@@ -518,7 +587,6 @@ onMounted(() => {
 
   treeContainer.append(tree);
 });
-
 </script>
 
 <template>

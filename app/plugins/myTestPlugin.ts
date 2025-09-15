@@ -12,7 +12,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   if (import.meta.client) {
     nuxtApp.hooks.hook('app:created', () => {
-        console.log('ClientSide MyStoreState:', nuxtApp.payload.myStoreState);
+      console.log('ClientSide MyStoreState:', nuxtApp.payload.myStoreState);
     });
   }
 });
