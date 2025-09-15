@@ -2,9 +2,7 @@
 </script>
 
 <template>
-  <NuxtLayout name="desktop-default">
-    <NuxtPage></NuxtPage>
-  </NuxtLayout>
+  
 </template>
 
 <style scoped>

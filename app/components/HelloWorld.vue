@@ -492,7 +492,6 @@ function createTree() {
   ];
 
   // const flare = flareJson;
-  debugger;
   const chart = Tree(getRomanovTreeStructure({childrenAlign: 'parent', groupMarriagesBy: 'firstPersonId'}), {
     mode: 'vertical',
     label: (d) => d.name,
