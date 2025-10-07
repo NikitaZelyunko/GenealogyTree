@@ -12,7 +12,8 @@
     "vite:dev": "vite",
     "vite:build": "vue-tsc -b && vite build",
     "vite:preview": "vite preview",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-icons": "node icons-font-generator/generate-icons-font.js"
   },
   "dependencies": {
     "d3": "^7.9.0",
