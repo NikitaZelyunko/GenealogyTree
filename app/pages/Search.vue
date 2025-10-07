@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  const Data = Math.random();
+const Data = Math.random();
 </script>
 
 <template>

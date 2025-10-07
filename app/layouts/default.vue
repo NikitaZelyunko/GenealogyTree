@@ -6,7 +6,9 @@ import AppFooter from '~/components/AppFooter.vue';
 <template>
   <div>
     <AppHeader />
-    <slot />
+    <div class="mt-12">
+      <slot />
+    </div>
     <AppFooter />
   </div>
 </template>

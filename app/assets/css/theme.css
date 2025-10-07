@@ -1,0 +1,30 @@
+@theme {
+  /* TODO зафиксировать цвета которые будут использоваться */
+
+  /* --color-primary-50: oklch(0.975 0.009 78.3);
+  --color-primary-100: oklch(0.91 0.018 78.2);
+  --color-primary-500: oklch(0.648 0.034 59.4);
+  --color-primary-700: oklch(0.487 0.031 70.7);
+  --color-primary-900: oklch(0.35 0.024 61.7); */
+
+  /* --color-white-900: oklch(1 0 0); */
+  /* --color-white-700: oklch(0.8 0 0); */
+
+  /* --color-black-900: oklch(0 0 0);
+  --color-black-700: oklch(0.3 0 0);
+  --color-black-100: oklch(0.5 0 0); */
+
+  --color-font-black: oklch(0.15 0 0);
+
+  /* --color-blue-900: oklch(0.31 0.116 259.8);
+  --color-blue-700: oklch(0.47 0.175 259.8);
+
+  --color-green-900: oklch(0.45 0.092 145);
+  --color-green-700: oklch(0.55 0.112 145);
+
+  --color-red-900: oklch(0.425 0.173 26);
+  --color-red-700: oklch(0.5 0.203 26); */
+
+  --font-serif: Georgia, serif;
+  --font-sans: Arial, sans-serif;
+}
