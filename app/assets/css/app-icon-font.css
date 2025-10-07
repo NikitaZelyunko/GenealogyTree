@@ -1,0 +1,28 @@
+@font-face {
+  font-family: 'app-icon-font';
+  src: url('/fonts/app-icon-font.woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.app-i {
+  font-family: 'app-icon-font';
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  display: inline-block;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.app-i-check:before {
+  content: '\e001';
+}
+.app-i-search:before {
+  content: '\e002';
+}
