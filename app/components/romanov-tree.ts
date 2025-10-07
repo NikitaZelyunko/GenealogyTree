@@ -15,7 +15,10 @@ type TRelation = {
   type: TRelationType;
 };
 
-type TRelationPersonIdKeys = keyof Pick<TRelation, 'firstPersonId' | 'secondPersonId'>;
+type TRelationPersonIdKeys = keyof Pick<
+  TRelation,
+  'firstPersonId' | 'secondPersonId'
+>;
 
 function createIdGenerator(start: number) {
   let counter = start;
@@ -61,11 +64,15 @@ class Genealogy {
   }
 
   getPersonsByParentRelationId(parentRelationId: number) {
-    return this.persons.filter((person) => person.parentsRelationId === parentRelationId);
+    return this.persons.filter(
+      (person) => person.parentsRelationId === parentRelationId,
+    );
   }
 
   getRelation(relationId: number) {
-    const relation = this.relations.find((relation) => relation.id === relationId);
+    const relation = this.relations.find(
+      (relation) => relation.id === relationId,
+    );
     if (!relation) {
       throw new Error(`Relation with id:${relationId} not found`);
     }
@@ -74,7 +81,9 @@ class Genealogy {
 
   getRelationsByPersonId(personId: number) {
     return this.relations.filter(
-      (relation) => relation.firstPersonId === personId || relation.secondPersonId === personId,
+      (relation) =>
+        relation.firstPersonId === personId ||
+        relation.secondPersonId === personId,
     );
   }
 }
@@ -91,31 +100,58 @@ let firstPerson = romanovGenealogy.addPerson({
   parentsRelationId: relation.id,
 });
 
-relation = romanovGenealogy.addRelation(firstPerson, romanovGenealogy.addPerson({ name: 'Мария Милославская' }));
-romanovGenealogy.addPerson({ name: 'Федор Алексеевич', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Софья Алексеевна', parentsRelationId: relation.id });
+relation = romanovGenealogy.addRelation(
+  firstPerson,
+  romanovGenealogy.addPerson({ name: 'Мария Милославская' }),
+);
+romanovGenealogy.addPerson({
+  name: 'Федор Алексеевич',
+  parentsRelationId: relation.id,
+});
+romanovGenealogy.addPerson({
+  name: 'Софья Алексеевна',
+  parentsRelationId: relation.id,
+});
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Иван V', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Иван V',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Прасковья Салтыкова' }),
 );
 
-romanovGenealogy.addPerson({ name: 'Анна Иоановна', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Анна Иоановна',
+  parentsRelationId: relation.id,
+});
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Екатерина', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Екатерина',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Карл Леопольд' }),
 );
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Анна Леопольдовна', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Анна Леопольдовна',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Антон Ульрих' }),
 );
 
 romanovGenealogy.addPerson({ name: 'Иван VI', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Алексей', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Екатерина', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Елизавета', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Екатерина',
+  parentsRelationId: relation.id,
+});
+romanovGenealogy.addPerson({
+  name: 'Елизавета',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Петр', parentsRelationId: relation.id });
 
 relation = romanovGenealogy.addRelation(
@@ -123,7 +159,10 @@ relation = romanovGenealogy.addRelation(
   romanovGenealogy.addPerson({ name: 'Наталья Нарышкина' }),
 );
 
-firstPerson = romanovGenealogy.addPerson({ name: 'Петр I', parentsRelationId: relation.id });
+firstPerson = romanovGenealogy.addPerson({
+  name: 'Петр I',
+  parentsRelationId: relation.id,
+});
 
 relation = romanovGenealogy.addRelation(
   firstPerson,
@@ -131,18 +170,27 @@ relation = romanovGenealogy.addRelation(
 );
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Алексей', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Алексей',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Софья Шарлотта' }),
 );
 
-const startPerson = romanovGenealogy.addPerson({ name: 'Петр II', parentsRelationId: relation.id });
+const startPerson = romanovGenealogy.addPerson({
+  name: 'Петр II',
+  parentsRelationId: relation.id,
+});
 
 relation = romanovGenealogy.addRelation(
   firstPerson,
   romanovGenealogy.addPerson({ name: 'Екатерина I' }),
 );
 
-romanovGenealogy.addPerson({ name: 'Елизавета I', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Елизавета I',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Петр', parentsRelationId: relation.id });
 
 relation = romanovGenealogy.addRelation(
@@ -151,32 +199,56 @@ relation = romanovGenealogy.addRelation(
 );
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Петр III', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Петр III',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Екатерина II' }),
 );
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Павел I', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Павел I',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Мария Федоровна' }),
 );
 
-romanovGenealogy.addPerson({ name: 'Екатерина', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Константин', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Александра', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Екатерина',
+  parentsRelationId: relation.id,
+});
+romanovGenealogy.addPerson({
+  name: 'Константин',
+  parentsRelationId: relation.id,
+});
+romanovGenealogy.addPerson({
+  name: 'Александра',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Ольга', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Анна', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Елена', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Михаил', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Мария', parentsRelationId: relation.id });
 
-firstPerson = romanovGenealogy.addPerson({ name: 'Николай I', parentsRelationId: relation.id });
+firstPerson = romanovGenealogy.addPerson({
+  name: 'Николай I',
+  parentsRelationId: relation.id,
+});
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Александр I', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Александр I',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Елизавета Алексеевна' }),
 );
 
-romanovGenealogy.addPerson({ name: 'Елизавета', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Елизавета',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Мария', parentsRelationId: relation.id });
 
 relation = romanovGenealogy.addRelation(
@@ -186,12 +258,21 @@ relation = romanovGenealogy.addRelation(
 
 romanovGenealogy.addPerson({ name: 'Михаил', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Николай', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Константин', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Константин',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Ольга', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Александра', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Александра',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Мария', parentsRelationId: relation.id });
 
-firstPerson = romanovGenealogy.addPerson({ name: 'Александр II', parentsRelationId: relation.id });
+firstPerson = romanovGenealogy.addPerson({
+  name: 'Александр II',
+  parentsRelationId: relation.id,
+});
 
 relation = romanovGenealogy.addRelation(
   firstPerson,
@@ -200,7 +281,10 @@ relation = romanovGenealogy.addRelation(
 
 romanovGenealogy.addPerson({ name: 'Георгий', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Ольга', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Екатерина', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Екатерина',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Борис', parentsRelationId: relation.id });
 
 relation = romanovGenealogy.addRelation(
@@ -212,39 +296,60 @@ romanovGenealogy.addPerson({ name: 'Алексей', parentsRelationId: relation
 romanovGenealogy.addPerson({ name: 'Сергей', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Павел', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Мария', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Александра', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Александра',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Николай', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Владимир', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Владимир',
+  parentsRelationId: relation.id,
+});
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Александр III', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Александр III',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Мария Федоровна' }),
 );
 
-romanovGenealogy.addPerson({ name: 'Александр', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Александр',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Георгий', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Ксения', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Михаил', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Ольга', parentsRelationId: relation.id });
 
 relation = romanovGenealogy.addRelation(
-  romanovGenealogy.addPerson({ name: 'Николай II', parentsRelationId: relation.id }),
+  romanovGenealogy.addPerson({
+    name: 'Николай II',
+    parentsRelationId: relation.id,
+  }),
   romanovGenealogy.addPerson({ name: 'Александра Федоровна' }),
 );
 
 romanovGenealogy.addPerson({ name: 'Ольга', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Татьяна', parentsRelationId: relation.id });
 romanovGenealogy.addPerson({ name: 'Мария', parentsRelationId: relation.id });
-romanovGenealogy.addPerson({ name: 'Анастасия', parentsRelationId: relation.id });
+romanovGenealogy.addPerson({
+  name: 'Анастасия',
+  parentsRelationId: relation.id,
+});
 romanovGenealogy.addPerson({ name: 'Алексей', parentsRelationId: relation.id });
 
 type TGenealogicalTreeNodeType = 'node' | 'marriage';
 type TGenealogicalTreeData = {
   nodeType: TGenealogicalTreeNodeType;
 };
-function createTreeNodeFromPerson(person: TPerson): TTree<TGenealogicalTreeData> {
+function createTreeNodeFromPerson(
+  person: TPerson,
+): TTree<TGenealogicalTreeData> {
   return {
     name: person.name,
+    type: 'person',
     id: `person-${person.id}`,
     children: [],
     data: {
@@ -253,9 +358,12 @@ function createTreeNodeFromPerson(person: TPerson): TTree<TGenealogicalTreeData>
   };
 }
 
-function createTreeMarriageNodeFromRelation(relation: TRelation): TTree<TGenealogicalTreeData> {
+function createTreeMarriageNodeFromRelation(
+  relation: TRelation,
+): TTree<TGenealogicalTreeData> {
   return {
     name: '',
+    type: 'marriage',
     id: `marriage-${relation.id}`,
     children: [],
     data: {
@@ -273,9 +381,8 @@ function createTreeStructure(genealogy: Genealogy, startPersonId: number) {
   function createTree(
     currentPerson: TPerson,
     parentNode: TTree<TGenealogicalTreeData> | null,
-    childNode: TTree<TGenealogicalTreeData> | null,
     // currentNode: TTree<TGenealogicalTreeData>,
-    prevPersonId: number,
+    prevPersonId?: number,
   ) {
     const currentNode = createTreeNodeFromPerson(currentPerson);
     const parents: TPerson[] = [];
@@ -292,7 +399,7 @@ function createTreeStructure(genealogy: Genealogy, startPersonId: number) {
         return;
       }
       // const parentNode = createTreeNodeFromPerson(parent);
-      createTree(parent, null, currentNode, currentPerson.id);
+      createTree(parent, null, currentPerson.id);
     });
 
     const marriages = genealogy.getRelationsByPersonId(currentPerson.id);
@@ -307,7 +414,7 @@ function createTreeStructure(genealogy: Genealogy, startPersonId: number) {
         if (child.id === prevPersonId) {
           return;
         }
-        createTree(child, marriageNode, null, currentPerson.id);
+        createTree(child, marriageNode, currentPerson.id);
       });
     });
   }
@@ -321,17 +428,17 @@ type TTreeChildrenAlign = 'centerNode' | 'parent';
 type TCreateTreeConfig = {
   groupMarriagesBy: TRelationPersonIdKeys;
   childrenAlign: TTreeChildrenAlign;
-}
+};
 
 function createFullTreeStructure({
-  genealogy, 
-  startPersonId, 
-  config
+  genealogy,
+  startPersonId,
+  config,
 }: {
-    genealogy: Genealogy;
-    startPersonId: number;
-    config: TCreateTreeConfig;
-  }) {
+  genealogy: Genealogy;
+  startPersonId: number;
+  config: TCreateTreeConfig;
+}) {
   // TODO возможно нам нужны не все люди по поколениям, а только те у которых нет родителей в каждом из поколений
   const generationsMap = new Map<number, Map<number, TPerson>>();
   let minGenerationIndex = 0;
@@ -402,23 +509,19 @@ function createFullTreeStructure({
     childsMap.set(parentsRelationId, childs);
   }
 
-  function iterateOverGenealogy(
-    {
-      currentPersonId,
-      previousPersonId,
-      previousRelationId,
-      previousParentRelationId,
-      generationNumber,
-    }:
-    {
-      currentPersonId: number;
-      previousPersonId: number | null;
-      previousRelationId: number | null;
-      previousParentRelationId: number | null;
-      generationNumber: number;
-    },
-
-  ) {
+  function iterateOverGenealogy({
+    currentPersonId,
+    previousPersonId,
+    previousRelationId,
+    previousParentRelationId,
+    generationNumber,
+  }: {
+    currentPersonId: number;
+    previousPersonId: number | null;
+    previousRelationId: number | null;
+    previousParentRelationId: number | null;
+    generationNumber: number;
+  }) {
     recalcGenerationsIndexes(generationNumber);
     const person = genealogy.getPerson(currentPersonId);
     addPersonToGeneration({
@@ -428,7 +531,10 @@ function createFullTreeStructure({
 
     addChild(person);
 
-    if (person.parentsRelationId !== null && person.parentsRelationId !== previousParentRelationId) {
+    if (
+      person.parentsRelationId !== null &&
+      person.parentsRelationId !== previousParentRelationId
+    ) {
       const parentRelation = genealogy.getRelation(person.parentsRelationId);
       const parents = [
         genealogy.getPerson(parentRelation.firstPersonId),
@@ -446,9 +552,9 @@ function createFullTreeStructure({
           generationNumber: generationNumber - 1,
         });
       });
-      const siblings = genealogy.getPersonsByParentRelationId(parentRelation.id).filter(
-        (sibling) => sibling.id !== currentPersonId,
-      );
+      const siblings = genealogy
+        .getPersonsByParentRelationId(parentRelation.id)
+        .filter((sibling) => sibling.id !== currentPersonId);
       siblings.forEach((sibling) => {
         iterateOverGenealogy({
           currentPersonId: sibling.id,
@@ -468,13 +574,15 @@ function createFullTreeStructure({
      * Возможно имеет смысл такие ситуации как-то объединять на постобработке.
      * На данный момент в этом случае будут дубликаты супругов.
      */
-    const filteredMarriages = previousRelationId !== null
-      ? marriages.filter((marriage) => marriage.id !== previousRelationId)
+    const filteredMarriages =
+      previousRelationId !== null ?
+        marriages.filter((marriage) => marriage.id !== previousRelationId)
       : marriages;
 
     filteredMarriages.forEach((marriage) => {
-      const anotherPersonId = marriage.firstPersonId === currentPersonId
-        ? marriage.secondPersonId
+      const anotherPersonId =
+        marriage.firstPersonId === currentPersonId ?
+          marriage.secondPersonId
         : marriage.firstPersonId;
 
       addMarriage(marriage);
@@ -489,13 +597,15 @@ function createFullTreeStructure({
 
       const children = genealogy.getPersonsByParentRelationId(marriage.id);
 
-      children.forEach((child) => iterateOverGenealogy({
-        currentPersonId: child.id,
-        previousPersonId: currentPersonId,
-        previousRelationId: null,
-        previousParentRelationId: marriage.id,
-        generationNumber: generationNumber + 1,
-      }));
+      children.forEach((child) =>
+        iterateOverGenealogy({
+          currentPersonId: child.id,
+          previousPersonId: currentPersonId,
+          previousRelationId: null,
+          previousParentRelationId: marriage.id,
+          generationNumber: generationNumber + 1,
+        }),
+      );
     });
   }
 
@@ -536,7 +646,7 @@ function createFullTreeStructure({
     touchedPersons,
     resultMarriagesMap,
     resultPersons,
-    groupMarriagesBy
+    groupMarriagesBy,
   }: {
     personId: number;
     touchedPersons: Set<number>;
@@ -559,15 +669,16 @@ function createFullTreeStructure({
 
     personMarriages.forEach((marriage) => {
       const { firstPersonId, secondPersonId } = marriage;
-      const anotherPersonId = firstPersonId === personId ? secondPersonId : firstPersonId;
+      const anotherPersonId =
+        firstPersonId === personId ? secondPersonId : firstPersonId;
       if (touchedPersons.has(anotherPersonId)) {
         return;
       }
       let personMarriages = resultMarriagesMap.get(marriage[groupMarriagesBy]);
-      if(personMarriages) {
+      if (personMarriages) {
         personMarriages.push(marriage);
       } else {
-        personMarriages = [marriage]
+        personMarriages = [marriage];
       }
       resultMarriagesMap.set(marriage[groupMarriagesBy], personMarriages);
       iterateOverMarriages({
@@ -587,7 +698,7 @@ function createFullTreeStructure({
       noParent: person.parentsRelationId === null,
       data: {
         personId: person.id,
-      }
+      },
     };
   }
 
@@ -603,7 +714,7 @@ function createFullTreeStructure({
       };
       nodes.splice(centerIndex, 0, centerNode);
     } else {
-      centerNode = nodes[centerIndex];
+      centerNode = nodes[centerIndex]!;
     }
 
     return centerNode;
@@ -616,13 +727,13 @@ function createFullTreeStructure({
       type: 'marriage',
       data: {
         marriage,
-      }
+      },
     };
   }
 
-  const personsInGenerationWithoutParents = Array.from(generations[1][1].values()).filter(
-    (person) => person.parentsRelationId === null,
-  );
+  const personsInGenerationWithoutParents = Array.from(
+    generations[1]?.[1].values() ?? [],
+  ).filter((person) => person.parentsRelationId === null);
 
   function getNewPersonsAndNewMarriagesFromChilds({
     childs,
@@ -663,7 +774,7 @@ function createFullTreeStructure({
     newPersonsNodes,
     newMarriagesMap,
     newMarriagesNodes,
-    newMarriages
+    newMarriages,
   }: {
     marriageNode: TTree<any>;
     newPersonsNodes: TTree<any>[];
@@ -675,11 +786,13 @@ function createFullTreeStructure({
 
     newPersonsNodes.forEach((personNode) => {
       const personMarriages = newMarriagesMap.get(personNode.data?.personId);
-      if(!personMarriages) {
+      if (!personMarriages) {
         return;
       }
 
-      const currentPersonMarriagesNodes = personMarriages.map(mapMarriageToTreeNode);
+      const currentPersonMarriagesNodes = personMarriages.map(
+        mapMarriageToTreeNode,
+      );
 
       newMarriagesNodes.push(...currentPersonMarriagesNodes);
       newMarriages.push(...personMarriages);
@@ -692,7 +805,7 @@ function createFullTreeStructure({
     newPersonsNodes,
     newMarriagesMap,
     newMarriagesNodes,
-    newMarriages
+    newMarriages,
   }: {
     newPersonsNodes: TTree<any>[];
     newMarriagesMap: Map<number, TRelation[]>;
@@ -701,12 +814,14 @@ function createFullTreeStructure({
   }) {
     newPersonsNodes.forEach((personNode) => {
       const personMarriages = newMarriagesMap.get(personNode.data?.personId);
-      if(!personMarriages) {
+      if (!personMarriages) {
         return;
       }
 
-      const currentPersonMarriagesNodes = personMarriages.map(mapMarriageToTreeNode);
-      if(personNode.children) {
+      const currentPersonMarriagesNodes = personMarriages.map(
+        mapMarriageToTreeNode,
+      );
+      if (personNode.children) {
         personNode.children.push(...currentPersonMarriagesNodes);
       } else {
         personNode.children = currentPersonMarriagesNodes;
@@ -716,8 +831,6 @@ function createFullTreeStructure({
       newMarriages.push(...personMarriages);
     });
   }
-
-
 
   function stepOverMarriage({
     marriageNode,
@@ -730,39 +843,50 @@ function createFullTreeStructure({
     touchedPersons: Set<number>;
     config: TCreateTreeConfig;
   }) {
-    const { newPersons, newMarriagesMap } = getNewPersonsAndNewMarriagesFromChilds({ 
-      childs, 
-      touchedPersons, 
-      groupMarriagesBy: config.groupMarriagesBy 
-    });
+    const { newPersons, newMarriagesMap } =
+      getNewPersonsAndNewMarriagesFromChilds({
+        childs,
+        touchedPersons,
+        groupMarriagesBy: config.groupMarriagesBy,
+      });
     const newPersonsNodes = newPersons.map(mapPersonToTreeNode);
     marriageNode.children = newPersonsNodes;
 
     const newMarriagesNodes: TTree<any>[] = [];
     const newMarriages: TRelation[] = [];
 
-    if(config.childrenAlign === 'centerNode') {
-      addPersonsToCenterNode({marriageNode, newMarriages, newMarriagesMap, newMarriagesNodes, newPersonsNodes});
-    } else if(config.childrenAlign === 'parent') {
-      addPersonsToParentNode({newMarriages, newMarriagesMap, newMarriagesNodes, newPersonsNodes});
+    if (config.childrenAlign === 'centerNode') {
+      addPersonsToCenterNode({
+        marriageNode,
+        newMarriages,
+        newMarriagesMap,
+        newMarriagesNodes,
+        newPersonsNodes,
+      });
+    } else if (config.childrenAlign === 'parent') {
+      addPersonsToParentNode({
+        newMarriages,
+        newMarriagesMap,
+        newMarriagesNodes,
+        newPersonsNodes,
+      });
     }
 
     return { newMarriagesNodes, newMarriages };
   }
 
-  function createTreeWithAllNodes({
-    config
-  }: {
-    config: TCreateTreeConfig;
-  }) {
+  function createTreeWithAllNodes({ config }: { config: TCreateTreeConfig }) {
     // TODO подумать как управлять touchedPersons
     const touchedPersons = new Set<number>();
-    const startPersons = Array.from(generations[0][1].values());
-    const { newMarriages: firstMarriages, newMarriagesNodes: firstMarriagesNodes } = stepOverMarriage({
+    const startPersons = Array.from(generations[0]?.[1].values() ?? []);
+    const {
+      newMarriages: firstMarriages,
+      newMarriagesNodes: firstMarriagesNodes,
+    } = stepOverMarriage({
       marriageNode: treeRoot,
       childs: startPersons,
       touchedPersons,
-      config
+      config,
     });
 
     let currentMarriages = firstMarriages;
@@ -774,7 +898,7 @@ function createFullTreeStructure({
       touchedPersons.clear();
       currentMarriagesNodes.forEach((marriageNode, index) => {
         const marriage = currentMarriages[index];
-        const childs = childsMap.get(marriage.id);
+        const childs = childsMap.get(marriage?.id ?? -1);
         if (!childs) {
           return;
         }
@@ -782,7 +906,7 @@ function createFullTreeStructure({
           marriageNode,
           childs,
           touchedPersons,
-          config
+          config,
         });
         nextMarriages.push(...newMarriages);
         nextMarriagesNodes.push(...newMarriagesNodes);
@@ -795,7 +919,7 @@ function createFullTreeStructure({
     }
   }
 
-  createTreeWithAllNodes({config});
+  createTreeWithAllNodes({ config });
 
   // generations.reduce((acc, [, generation], generationIndex) => {
   //   const children = Array.from(generation.values()).map((person): TTree<any> => {
@@ -833,5 +957,9 @@ function createFullTreeStructure({
 }
 
 export function getRomanovTreeStructure(config: TCreateTreeConfig) {
-  return createFullTreeStructure({genealogy: romanovGenealogy, startPersonId: startPerson.id, config});
+  return createFullTreeStructure({
+    genealogy: romanovGenealogy,
+    startPersonId: startPerson.id,
+    config,
+  });
 }

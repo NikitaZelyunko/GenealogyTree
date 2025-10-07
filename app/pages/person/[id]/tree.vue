@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import HelloWorld from '../../../components/HelloWorld.vue';
-import {
-  useAsyncData,
-  useLazyAsyncData,
-  useRoute,
-  useRuntimeConfig,
-} from '#app';
+import { useAsyncData, useRoute, useRuntimeConfig } from '#app';
 import { definePageMeta } from '#imports';
 
 definePageMeta({

@@ -1,6 +1,6 @@
 import type { TTree } from './tree';
 
-export const RomanovTreePrepared: TTree<any> = {
+export const RomanovTreePrepared: TTree<unknown> = {
   name: 'Root',
   hidden: true,
   type: 'person',

@@ -1,11 +1,7 @@
-import { abortNavigation, defineNuxtRouteMiddleware, navigateTo } from '#app';
+import { abortNavigation, defineNuxtRouteMiddleware } from '#app';
 
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware((to) => {
   if (to.params.id === '2') {
     return abortNavigation();
   }
-
-//   if (to.path !== '/') {
-//     return navigateTo('/');
-//   }
 });

@@ -3,7 +3,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 import stylistic from '@stylistic/eslint-plugin';
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
 const stylisticConfig = stylistic.configs.customize({
   semi: true,
@@ -11,9 +11,24 @@ const stylisticConfig = stylistic.configs.customize({
   braceStyle: '1tbs',
 });
 
-stylisticConfig.rules['@stylistic/max-len'] = ['error', { code: 120 }];
+const lineMaxLength = 120;
+stylisticConfig.rules['@stylistic/max-len'] = [
+  'error',
+  { code: lineMaxLength },
+];
+
+const ignoreVueCssIssues = {
+  files: ['**/*.vue'],
+  rules: {
+    '@stylistic/max-len': [
+      'error',
+      { code: lineMaxLength, ignorePattern: '@apply ' },
+    ],
+  },
+};
 
 export default defineConfig([
+  globalIgnores(['node_modules/*', '.output/*', '.nuxt/*']),
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
     plugins: { js },
@@ -38,4 +53,5 @@ export default defineConfig([
     rules: { 'vue/multi-word-component-names': 'off' },
   },
   stylisticConfig,
+  ignoreVueCssIssues,
 ]);

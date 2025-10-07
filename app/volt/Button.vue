@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <Button
     unstyled
@@ -20,7 +21,8 @@ import Button, {
 import { ref } from 'vue';
 import { ptViewMerge } from './utils';
 
-type Props = ButtonProps;
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface Props extends /* @vue-ignore */ ButtonProps {}
 defineProps<Props>();
 
 const theme = ref<ButtonPassThroughOptions>({

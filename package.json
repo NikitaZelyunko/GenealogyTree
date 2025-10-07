@@ -13,7 +13,8 @@
     "vite:build": "vue-tsc -b && vite build",
     "vite:preview": "vite preview",
     "lint": "eslint",
-    "generate-icons": "node icons-font-generator/generate-icons-font.js"
+    "generate-icons": "node icons-font-generator/generate-icons-font.js",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "d3": "^7.9.0",
@@ -23,8 +24,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13",
     "tailwindcss-primeui": "^0.6.1",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.1"
+    "vue": "^3.5.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
@@ -40,6 +40,7 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "typescript": "~5.8.3",
-    "typescript-eslint": "^8.35.1"
+    "typescript-eslint": "^8.35.1",
+    "vue-tsc": "^3.1.1"
   }
 }

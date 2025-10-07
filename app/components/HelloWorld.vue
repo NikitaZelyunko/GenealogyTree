@@ -16,7 +16,7 @@ import { getRomanovTreeStructure } from './romanov-tree';
 // Базовый пример взял отсюда: https://observablehq.com/@d3/tree-component
 const treeRoot = ref<HTMLElement | null>(null);
 
-type TreeHierarchyConfig<Datum extends TTree> = {
+type TreeHierarchyConfig<Datum extends TTree<any>> = {
   path: Parameters<d3.StratifyOperator<Datum>['path']>[0]; // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
   id:
     | (<D extends { id?: string }>(
@@ -29,7 +29,7 @@ type TreeHierarchyConfig<Datum extends TTree> = {
   children: Parameters<typeof d3.hierarchy<Datum>>[1]; // if hierarchical data, given a d in data, returns its children
 };
 
-type Config<Datum extends TTree> = {
+type Config<Datum extends TTree<any>> = {
   mode: 'horizontal' | 'vertical';
   treeHierarchyConfig: TreeHierarchyConfig<Datum>;
   tree: () => TreeLayout<Datum> | ClusterLayout<Datum>; // TODO здесь могут быть любые layout для древовидных структур;// layout algorithm (typically d3.tree or d3.cluster)
@@ -57,7 +57,9 @@ type Config<Datum extends TTree> = {
 /**
  * Получение минимальных и максимальных границ координат точек дерева
  */
-function getCoordinateRanges<Datum extends TTree>(root: HierarchyNode<Datum>) {
+function getCoordinateRanges<Datum extends TTree<any>>(
+  root: HierarchyNode<Datum>,
+) {
   let x0 = Infinity;
   let x1 = -x0;
   let y0 = Infinity;
@@ -85,7 +87,7 @@ function getCoordinateRanges<Datum extends TTree>(root: HierarchyNode<Datum>) {
   };
 }
 
-function createTreeRoot<Datum extends TTree>(
+function createTreeRoot<Datum extends TTree<any>>(
   data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects),
   {
     path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
@@ -128,7 +130,7 @@ function createTreeRoot<Datum extends TTree>(
   return root;
 }
 
-function Tree<Datum extends TTree>(
+function Tree<Datum extends TTree<any>>(
   data: Datum, // data is either tabular (array of objects) or hierarchy (nested objects)
   config: Partial<Config<Datum>>,
 ) {
@@ -379,12 +381,12 @@ function Tree<Datum extends TTree>(
     const secondPersonNode = personIdToNodeMap[secondPersonId];
 
     acc.push({
-      source: firstPersonNode,
+      source: firstPersonNode!,
       target: node,
     });
 
     acc.push({
-      source: secondPersonNode,
+      source: secondPersonNode!,
       target: node,
     });
     return acc;
