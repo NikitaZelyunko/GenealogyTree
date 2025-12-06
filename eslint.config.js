@@ -35,8 +35,18 @@ export default defineConfig([
     extends: ['js/recommended'],
   },
   {
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
-    languageOptions: { globals: globals.browser },
+    files: ['**/*.{jsx,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+  },
+  {
+    files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue}'],
+    languageOptions: { globals: globals.browser }, // TODO понять зачем нужен это globals
   },
   tseslint.configs.recommended,
   pluginVue.configs['flat/essential'],

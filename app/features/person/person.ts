@@ -1,4 +1,5 @@
-type TDateSegments = {
+// TODO добавить время
+export type TDateSegments = {
   day: number;
   month: number;
   year: number;
@@ -49,6 +50,7 @@ export type TPerson = {
   name: Partial<NameSegments>;
   birthDate: Partial<TDateSegments>;
   birthPlace: Partial<TPlaceSegments>;
+  isDead: boolean;
   deathDate: Partial<TDateSegments>;
   deathPlace: Partial<TPlaceSegments>;
   diseases: TDisease[];

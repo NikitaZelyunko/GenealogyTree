@@ -10,6 +10,7 @@ const firstPerson: TPerson = {
   birthDate: {
     year: 1985,
   },
+  isDead: false,
   birthPlace: {},
   deathDate: {},
   deathPlace: {},
@@ -34,6 +35,7 @@ const secondPerson: TPerson = {
   birthPlace: {
     place: 'Москва, Россия',
   },
+  isDead: true,
   deathDate: {
     day: 20,
     month: 3,
@@ -99,6 +101,7 @@ const thirdPerson: TPerson = {
   birthPlace: {
     place: 'Новосибирск',
   },
+  isDead: false,
   deathDate: {},
   deathPlace: {},
   diseases: [
@@ -144,6 +147,7 @@ const fourthPerson: TPerson = {
   birthPlace: {
     place: 'Новосибирск',
   },
+  isDead: false,
   deathDate: {},
   deathPlace: {},
   diseases: [],

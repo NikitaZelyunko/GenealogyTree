@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-08-13',
+
   typescript: {
     typeCheck: true,
     strict: true,
@@ -16,6 +17,10 @@ export default defineNuxtConfig({
 
   experimental: {
     // typedPages: true, // unplugin-vue-router
+  },
+
+  features: {
+    inlineStyles: true,
   },
 
   imports: {
