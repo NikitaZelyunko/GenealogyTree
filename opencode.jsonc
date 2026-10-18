@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@cortexkit/opencode-magic-context@latest"],
+  "compaction": { "auto": false, "prune": false },
+
+  // Lead model — the smart model that talks to you and orchestrates workers.
+  // Verify the exact ID with /models in the TUI.
+  "model": "kimi-code-plan-global/k3",
+  "default_agent": "lead",
+
+  // Permission rules — last matching rule wins.
+  "permissions": [
+    // Free read/write for everything inside the project.
+    { "action": "read", "resource": "*", "effect": "allow" },
+    { "action": "edit", "resource": "*", "effect": "allow" },
+    // Keep the built-in .env protection (broad allow above would override it).
+    { "action": "read", "resource": "*.env", "effect": "ask" },
+    { "action": "read", "resource": "*.env.*", "effect": "ask" },
+    { "action": "read", "resource": "*.env.example", "effect": "allow" },
+    // Block ALL read/write outside the project directory.
+    { "action": "external_directory", "resource": "*", "effect": "deny" },
+    // Ask before ANY shell command. Directory inference from command text is
+    // best-effort, so this is the only reliable gate for shell access to
+    // external paths. Use "Allow always" on prompts to save safe commands
+    // as project-scoped allow rules.
+    { "action": "shell", "resource": "*", "effect": "ask" }
+  ],
+
+  // Hard-deny external access. Policies run AFTER permissions and saved
+  // "allow always" approvals, so this cannot be lifted by an approval
+  // prompt or a global `ask` rule — only by a global/system policy.
+  "policies": [
+    { "action": "tool.use", "resource": "external_directory:*", "effect": "deny" },
+  ]
+}
