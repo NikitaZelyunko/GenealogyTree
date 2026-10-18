@@ -43,15 +43,11 @@
     "oxlint": "^1.88.0",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "simple-git-hooks": "^2.14.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5",
     "vue-tsc": "^3.3.13"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
     "*.{ts,tsx,vue,js,mjs,cjs}": [
