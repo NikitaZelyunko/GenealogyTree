@@ -23,13 +23,17 @@
     // best-effort, so this is the only reliable gate for shell access to
     // external paths. Use "Allow always" on prompts to save safe commands
     // as project-scoped allow rules.
-    { "action": "shell", "resource": "*", "effect": "ask" }
+    { "action": "shell", "resource": "*", "effect": "ask" },
   ],
 
   // Hard-deny external access. Policies run AFTER permissions and saved
   // "allow always" approvals, so this cannot be lifted by an approval
   // prompt or a global `ask` rule — only by a global/system policy.
   "policies": [
-    { "action": "tool.use", "resource": "external_directory:*", "effect": "deny" },
-  ]
+    {
+      "action": "tool.use",
+      "resource": "external_directory:*",
+      "effect": "deny",
+    },
+  ],
 }

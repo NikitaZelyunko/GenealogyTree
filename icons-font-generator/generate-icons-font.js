@@ -14,7 +14,7 @@ const fontStream = new SVGIcons2SVGFontStream({
   centerVertically: true, // Мне показалось это удачным решением с учетом используемого ui-kit
 });
 
-const baseIconsPath = `${cwd()}/app/assets/icons/`;
+const baseIconsPath = `${cwd()}/src/assets/icons/`;
 const iconsDestination = `${cwd()}/public/fonts/${fontName}.svg`;
 const iconsFontDestination = `${cwd()}/public/fonts/${fontName}.woff2`;
 

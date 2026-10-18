@@ -18,15 +18,15 @@ relationship model, and D3.js visualization.
 
 ## Phase overview
 
-| Phase | Name | File | Depends on |
-|-------|------|------|-----------|
-| 0 | Cleanup & tooling | [phase-0-cleanup.md](roadmap/phase-0-cleanup.md) | — |
-| 1 | Foundation: domain model & data layer | [phase-1-data-layer.md](roadmap/phase-1-data-layer.md) | 0 |
-| 2 | App shell & person CRUD | [phase-2-person-crud.md](roadmap/phase-2-person-crud.md) | 1 |
-| 3 | Relationship management | [phase-3-relationships.md](roadmap/phase-3-relationships.md) | 2 |
-| 4 | Tree visualization (D3) | [phase-4-visualization.md](roadmap/phase-4-visualization.md) | 3 |
-| 5 | Export/import & PWA | [phase-5-export-pwa.md](roadmap/phase-5-export-pwa.md) | 1 (PWA: also 2) |
-| 6 | Polish & hardening | [phase-6-polish.md](roadmap/phase-6-polish.md) | 2–5 |
+| Phase | Name                                  | File                                                         | Depends on      |
+| ----- | ------------------------------------- | ------------------------------------------------------------ | --------------- |
+| 0     | Cleanup & tooling                     | [phase-0-cleanup.md](roadmap/phase-0-cleanup.md)             | —               |
+| 1     | Foundation: domain model & data layer | [phase-1-data-layer.md](roadmap/phase-1-data-layer.md)       | 0               |
+| 2     | App shell & person CRUD               | [phase-2-person-crud.md](roadmap/phase-2-person-crud.md)     | 1               |
+| 3     | Relationship management               | [phase-3-relationships.md](roadmap/phase-3-relationships.md) | 2               |
+| 4     | Tree visualization (D3)               | [phase-4-visualization.md](roadmap/phase-4-visualization.md) | 3               |
+| 5     | Export/import & PWA                   | [phase-5-export-pwa.md](roadmap/phase-5-export-pwa.md)       | 1 (PWA: also 2) |
+| 6     | Polish & hardening                    | [phase-6-polish.md](roadmap/phase-6-polish.md)               | 2–5             |
 
 ## Required work items (from project directive)
 

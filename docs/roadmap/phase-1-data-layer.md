@@ -12,7 +12,7 @@ implementation (Dexie + OPFS) with unit tests. No UI work in this phase.
     (partial dates allowed, e.g. `"1894"` or `"1894-07"`); places, comment,
     `avatarKey`, `photoKeys[]`, `createdAt`/`updatedAt`.
   - `Relationship` — `type: RelationshipType` (`'PARENT_CHILD' | 'SPOUSE' |
-    'GODPARENT' | 'FRIEND' | ...`), `fromPersonId`, `toPersonId`, free-form
+'GODPARENT' | 'FRIEND' | ...`), `fromPersonId`, `toPersonId`, free-form
     `metadata` (marriage date, role, ...). Direction conventions documented:
     `PARENT_CHILD`: from=parent → to=child; `GODPARENT`: from=godparent →
     to=godchild; `SPOUSE`: symmetric but stored once.

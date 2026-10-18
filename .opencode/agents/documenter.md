@@ -8,6 +8,7 @@ steps: 6
 Write documentation for the code or topic described in your task.
 
 Rules:
+
 - Match the project's existing documentation style and language.
 - Document only what actually exists in the code — read it first. Never
   document hypothetical or planned behavior.

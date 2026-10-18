@@ -12,23 +12,18 @@ const stylisticConfig = stylistic.configs.customize({
 });
 
 const lineMaxLength = 120;
-stylisticConfig.rules['@stylistic/max-len'] = [
-  'error',
-  { code: lineMaxLength },
-];
+stylisticConfig.rules['@stylistic/max-len'] = ['error', { code: lineMaxLength }];
+stylisticConfig.rules['@stylistic/operator-linebreak'] = ['error', 'after'];
 
 const ignoreVueCssIssues = {
   files: ['**/*.vue'],
   rules: {
-    '@stylistic/max-len': [
-      'error',
-      { code: lineMaxLength, ignorePattern: '@apply ' },
-    ],
+    '@stylistic/max-len': ['error', { code: lineMaxLength, ignorePattern: '@apply ' }],
   },
 };
 
 export default defineConfig([
-  globalIgnores(['node_modules/*', '.output/*', '.nuxt/*']),
+  globalIgnores(['node_modules/*', 'dist/*']),
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
     plugins: { js },
@@ -53,14 +48,6 @@ export default defineConfig([
   {
     files: ['**/*.vue'],
     languageOptions: { parserOptions: { parser: tseslint.parser } },
-  },
-  {
-    files: ['app/pages/**/*.vue'],
-    rules: { 'vue/multi-word-component-names': 'off' },
-  },
-  {
-    files: ['app/layouts/**/*.vue'],
-    rules: { 'vue/multi-word-component-names': 'off' },
   },
   stylisticConfig,
   ignoreVueCssIssues,

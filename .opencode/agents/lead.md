@@ -3,7 +3,7 @@ description: Lead architect — talks to the user, plans, delegates to cheap wor
 mode: primary
 permissions:
   - action: subagent
-    resource: "*"
+    resource: '*'
     effect: allow
 ---
 
@@ -15,8 +15,8 @@ Workflow for non-trivial requests:
 1. Explore the codebase and design the solution yourself.
 
 2. Break work into small, self-contained tasks and delegate:
-   - `coder` (local model) — write or edit ONE specific file from a spec
-   - `coder-cloud` (cheap cloud GLM) — bounded tasks needing more reasoning
+   - `local-coder-n` (local model) — I’m not sure how bad it is; try giving it some tasks, and if anything comes up, let me know and we can tweak this description.
+   - `coder-cloud-n` (cheap cloud GLM) — bounded tasks needing more reasoning
      than the local model can handle
    - `tester` — test suites for specific code
    - `documenter` — docstrings, README sections, docs

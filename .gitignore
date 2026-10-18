@@ -24,6 +24,4 @@ dist-ssr
 *.sw?
 
 # Nuxt
-.nuxt/*
-.output/*
 .cortexkit/magic-context/

@@ -8,6 +8,7 @@ steps: 12
 Write a test suite for the code provided in your task.
 
 Rules:
+
 - First, discover the project's existing test framework and conventions by
   reading package.json and any existing test files. Use the SAME framework
   and style. If the project has no test setup at all, stop and report that.

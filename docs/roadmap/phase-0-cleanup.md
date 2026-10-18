@@ -1,14 +1,37 @@
 # Phase 0 — Cleanup & Tooling
 
+> **Status: DONE** (2026-10-18, branch `feature/rebuild-app`)
+
 **Goal:** strip the project down to a lean Vite + Vue 3 + TypeScript base:
 no Nuxt, no external UI kit, up-to-date dependencies, fast linting with oxlint.
 
-**Current state:** Nuxt 4 (`nuxt.config.ts`, `app/` dir, `pages/`, `layouts/`,
-`middleware/`, `plugins/`), PrimeVue + Volt + tailwindcss-primeui, mock-data
-`features/person` module, D3 experiments in `app/components/`.
+## 0.1 keep/delete decisions (recorded)
 
-> Note: `package.json` already has `vite:dev` / `vite:build` / `vite:preview`
-> scripts and a root `index.html` — the migration is partly prepared.
+**Kept in `legacy/`** (reference only, excluded from build/lint/tsconfig; delete after Phase 4):
+
+- D3 experiments: `tree.ts`, `romanov-tree.ts`, `romanov-tree-prepared.ts`, `flare.ts`
+- Person mock module: `person/person.ts`, `person/person-api.ts`,
+  `person/mock-person-data.ts`, `person/PersonCard.vue`, `person/PersonInfo.vue`
+
+**Deleted:** `app/pages/`, `app/layouts/`, `app/middleware/`, `app/plugins/`,
+`app/volt/`, `app/components/` (AppHeader/AppFooter/HelloWorld — rebuilt in
+Phase 2), `app/assets/css/theme.css` (PrimeVue theme), `app/app.vue`,
+`nuxt.config.ts`, `.nuxt/`, `.output/`, `public/vite.svg`, `app/assets/vue.svg`.
+
+**Moved to `src/`:** `assets/css/*` (minus theme.css), `assets/icons/*`,
+`vite-env.d.ts`.
+
+**Icon decision:** keep the `icons-font-generator` pipeline (it is ours and
+works); its icon source path updated to `src/assets/icons/`.
+
+**Other decisions:**
+
+- `tailwind-merge` kept — the future `src/ui/` kit will need class merging.
+- `vite` is an explicit devDependency (was only a peer of `@vitejs/plugin-vue`).
+- `typescript` pinned at `^6` — vue-tsc cannot run on TS 7 (native port has no
+  `lib/tsc` export). Revisit when vue-tsc supports TS 7.
+- `baseUrl` removed from `tsconfig.app.json` (deprecated in TS 6); `paths`
+  resolves relative to the tsconfig file.
 
 ---
 

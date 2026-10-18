@@ -8,6 +8,7 @@ steps: 12
 Implement exactly what the spec in your task says — nothing more, nothing less.
 
 Rules:
+
 - Match the surrounding code style (formatting, naming, imports).
 - Do not refactor, reformat, or "improve" unrelated code.
 - Do not invent APIs, helpers, or files that were not mentioned in the spec.

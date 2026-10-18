@@ -6,18 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GenealogyTree is an **offline-first** application for digitizing genealogy: Vue 3 + TypeScript + Vite, local storage (IndexedDB via Dexie for structured data, OPFS for media), an extensible graph-based relationship model, and D3.js tree visualization. Installable as a PWA; backup/restore via ZIP export/import.
 
-> ⚠️ **The project is mid-rebuild.** The codebase is being migrated away from Nuxt + PrimeVue/Volt to plain Vite + Vue 3 with a custom UI kit. The authoritative plan is **[docs/ROADMAP.md](docs/ROADMAP.md)** (phase details in `docs/roadmap/phase-*.md`). Follow the roadmap, not the legacy code, when they conflict.
-
-## Rebuild Status & Required Work
-
-Per the project directive, all scheduled in **Phase 0** (`docs/roadmap/phase-0-cleanup.md`):
-
-1. **Remove Nuxt** → plain Vite + Vue 3 + vue-router (`vite:*` scripts and root `index.html` already exist).
-2. **Remove the UI kit** (PrimeVue, `app/volt/`, `tailwindcss-primeui`) → own component library in `src/ui/`, grown incrementally from Phase 2.
-3. **Update all packages** after the removals settle.
-4. **Add oxlint** (runs before eslint in `npm run lint`).
-
-Until Phase 0 completes, the legacy stack below still describes parts of the repo.
+> ✅ **Phase 0 complete.** The codebase is now plain Vite + Vue 3 + vue-router + Tailwind v4 with oxlint/eslint/prettier tooling and Vitest. The authoritative plan is **[docs/ROADMAP.md](docs/ROADMAP.md)** (phase details in `docs/roadmap/phase-*.md`). Next up: Phase 1 (domain model & data layer).
 
 ## Target Architecture (post-rebuild)
 
@@ -59,24 +48,28 @@ legacy/                    # Old D3 experiments for reference; deleted after Pha
 ### Dexie schema
 
 ```ts
-persons:       'id, lastName, firstName, birthDate, deathDate'
-relationships: 'id, type, fromPersonId, toPersonId, [fromPersonId+toPersonId]'
+persons: 'id, lastName, firstName, birthDate, deathDate';
+relationships: 'id, type, fromPersonId, toPersonId, [fromPersonId+toPersonId]';
 ```
+
 Schema changes = `db.version(n+1)` with `.upgrade()`.
 
 ## Development Commands
-
-Current (pre-Phase-0) — see `package.json`; target scripts after cleanup:
 
 ```bash
 npm run dev          # Vite dev server
 npm run build        # vue-tsc -b && vite build
 npm run preview      # Preview production build
 npm run lint         # oxlint && eslint
-npm run typecheck    # vue-tsc
+npm run lint:fix     # oxlint --fix && eslint --fix
+npm run typecheck    # vue-tsc -b
 npm run test         # Vitest (fake-indexeddb for Dexie tests)
-npm run generate-icons  # Icon font from SVGs (kept — it's ours)
+npm run format       # prettier --write .
+npm run format:check # prettier --check .
+npm run generate-icons  # Icon font from SVGs in src/assets/icons/ (kept — it's ours)
 ```
+
+Pre-commit: `simple-git-hooks` + `lint-staged` run oxlint/eslint/prettier on staged files.
 
 ## Conventions
 
@@ -88,8 +81,8 @@ npm run generate-icons  # Icon font from SVGs (kept — it's ours)
 - UI labels are in **Russian**.
 - Tests: Vitest + `@vue/test-utils` + `fake-indexeddb`; data-layer logic must have unit tests (see Definition of Done in docs/ROADMAP.md).
 
-## Legacy Notes (valid only until Phase 0 lands)
+## Legacy notes
 
-- `app/` Nuxt structure (`pages/`, `layouts/`, `plugins/prime-vue.ts`, `middleware/`) is being removed.
-- `app/volt/` PrimeVue wrappers and `app/features/person/mock-person-data.ts` are disposable; the D3 experiments (`app/components/tree.ts`, `romanov-tree*.ts`, `flare.ts`) move to `legacy/` as Phase 4 reference material.
+- `legacy/` holds the old D3 experiments (`tree.ts`, `romanov-tree*.ts`, `flare.ts`) and the old mock person module as Phase 4 reference material; excluded from tsconfig/eslint/oxlint/prettier; deleted once Phase 4 lands.
 - Old date helper formats segmented dates as `YYYY.MM.DD` with `XX` for unknown parts — the new model uses ISO strings instead.
+- `typescript` stays on ^6 until vue-tsc supports TypeScript 7 (see phase-0 doc).
